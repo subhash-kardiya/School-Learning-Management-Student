@@ -1,0 +1,186 @@
+/* --- DASHBOARD STYLES --- */
+:root {
+    --primary-color: #0056b3;
+    --secondary-color: #ffc107;
+    --text-color: #333333;
+    --bg-color: #f8faff;
+    --card-bg: #ffffff;
+    --gradiant-start: #1a237e;
+    /* Professional Deep Blue */
+    --gradiant-end: #121858;
+}
+
+:root {
+    --font-heading: 'Poppins', sans-serif;
+    --font-body: 'Inter', sans-serif;
+}
+
+body {
+    background-color: var(--bg-color);
+    font-family: var(--font-body);
+    margin: 0;
+}
+
+/* 1. Sidebar Styling */
+.sidebar {
+    height: 100vh;
+    width: 260px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    background: linear-gradient(180deg, var(--gradiant-start) 0%, var(--gradiant-end) 100%);
+    color: white;
+    padding-top: 10px;
+    z-index: 1000;
+    overflow-y: auto;
+    transition: all 0.3s ease;
+    box-shadow: 4px 0 15px rgba(0, 0, 0, 0.1);
+}
+
+.sidebar-brand {
+    padding: 25px;
+    font-family: var(--font-heading);
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--secondary-color);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+}
+
+.sidebar a {
+    padding: 14px 25px;
+    text-decoration: none;
+    font-size: 15px;
+    color: rgba(255, 255, 255, 0.65);
+    display: flex;
+    align-items: center;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    /* Modern Bouncy Feel */
+    border-left: 4px solid transparent;
+}
+
+.sidebar a i {
+    width: 25px;
+    font-size: 1.1rem;
+    margin-right: 12px;
+    text-align: center;
+    transition: transform 0.3s ease;
+}
+
+/* 1. Clear default highlights for parent toggles */
+.sidebar a.active {
+    background-color: transparent;
+    border-left: 4px solid transparent;
+    color: white;
+}
+
+/* 2. MODERN ACTIVE PAGE (ONLY ON CLICK) */
+.sidebar a.current-page {
+    color: white !important;
+    background: rgba(255, 255, 255, 0.12) !important;
+    /* Glassmorphism highlight */
+    border-left: 4px solid var(--secondary-color) !important;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+/* Simple Hover effect without the highlight box */
+.sidebar a:hover {
+    color: white !important;
+    text-decoration: none;
+}
+
+.sidebar a:hover i {
+    color: var(--secondary-color);
+}
+
+.sidebar .submenu {
+    padding-left: 55px;
+    font-size: 14px;
+    background-color: rgba(0, 0, 0, 0.1);
+    border-left: none !important;
+}
+
+.sidebar .submenu i {
+    font-size: 0.9rem;
+}
+
+/* 2. Main Content Area */
+.main-content {
+    margin-left: 260px;
+    padding: 10px;
+    background-color: var(--bg-color);
+    min-height: 100vh;
+}
+
+/* --- CUSTOM SCROLLBAR FOR SIDEBAR --- */
+.sidebar::-webkit-scrollbar {
+    width: 4px;
+}
+
+.sidebar::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+    background-color: rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+}
+
+/* --- RESPONSIVE SIDEBAR (MOBILE) --- */
+@media (max-width: 768px) {
+    .sidebar {
+        left: -260px;
+    }
+
+    .sidebar.active {
+        left: 0;
+    }
+
+    .main-content {
+        margin-left: 0;
+        width: 100%;
+        padding: 20px;
+    }
+
+    .sidebar-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 999;
+    }
+
+    .sidebar-overlay.active {
+        display: block;
+    }
+}
+
+/* --- GOOGLE STYLE PROFILE DROPDOWN --- */
+.dropdown-toggle.no-arrow::after {
+    display: none;
+}
+
+.profile-box {
+    width: 300px;
+    background: linear-gradient(135deg, var(--gradiant-start) 0%, var(--gradiant-end) 100%);
+    border: none;
+    border-radius: 15px;
+    margin-top: 10px;
+}
+
+.profile-box .dropdown-item {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.9rem;
+    transition: 0.2s;
+}
+
+.profile-box .dropdown-item:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: white;
+}

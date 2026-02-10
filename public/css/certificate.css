@@ -1,0 +1,213 @@
+/* =============================
+   CERTIFICATE MODULE STYLES
+============================= */
+.certificate-modern {
+    background:
+        radial-gradient(1200px 300px at 0% -10%, rgba(14, 165, 233, 0.12), transparent),
+        radial-gradient(1000px 260px at 100% -10%, rgba(79, 70, 229, 0.14), transparent),
+        linear-gradient(180deg, #f7f9ff 0%, #f9fbff 100%);
+    border-radius: 18px;
+}
+
+.glass-card {
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid #eef1ff;
+    box-shadow: 0 10px 30px rgba(17, 24, 39, 0.06);
+    border-radius: 14px;
+}
+
+.btn-modern {
+    background: linear-gradient(135deg, #4f46e5, #06b6d4);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 10px 18px;
+}
+
+.btn-modern:hover {
+    filter: brightness(0.95);
+    color: #fff;
+}
+
+.btn-soft {
+    background: #eef2ff;
+    color: #3730a3;
+    border: none;
+    border-radius: 10px;
+    padding: 8px 14px;
+}
+
+.btn-soft:hover {
+    filter: brightness(0.98);
+    color: #3730a3;
+}
+
+.hero-panel {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 18px;
+    background: rgba(255, 255, 255, 0.8);
+    border: 1px solid #eef1ff;
+    border-radius: 14px;
+}
+
+.preview-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+}
+
+.crest {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #111827, #4f46e5);
+    color: #fff;
+    display: grid;
+    place-items: center;
+    font-weight: 700;
+}
+
+.school-title {
+    font-weight: 800;
+    font-size: 16px;
+}
+
+.school-sub {
+    font-size: 12px;
+    color: #6b7280;
+}
+
+.chip {
+    background: #eef2ff;
+    color: #3730a3;
+    padding: 6px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.certificate-sheet.premium {
+    border: 1px solid #e5e7eb;
+    border-radius: 16px;
+    padding: 28px;
+    background: linear-gradient(180deg, #ffffff 0%, #fafbff 100%);
+}
+
+.certificate-sheet .lead {
+    font-size: 1.05rem;
+}
+
+.sign-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+    margin-top: 32px;
+}
+
+.sign-box {
+    text-align: center;
+    flex: 1;
+}
+
+.sign-line {
+    height: 2px;
+    background: #111827;
+    margin-bottom: 8px;
+}
+
+/* Student page extras */
+.student-hero {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.85);
+    border: 1px solid #eef1ff;
+    border-radius: 14px;
+    padding: 16px 18px;
+}
+
+.hero-meta {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.pill {
+    background: #111827;
+    color: #fff;
+    padding: 6px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+}
+
+.pill-secondary {
+    background: #eef2ff;
+    color: #3730a3;
+}
+
+.student-kpis {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+}
+
+.kpi-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    border-radius: 16px;
+    background: #fff;
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+}
+
+.kpi-alt {
+    background: #f8fafc;
+}
+
+.kpi-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 1.1rem;
+    background: linear-gradient(135deg, #4f46e5, #06b6d4);
+}
+
+.kpi-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #64748b;
+}
+
+.kpi-value {
+    font-weight: 700;
+    color: #0f172a;
+}
+
+/* Print rules */
+@media print {
+    .no-print { display: none !important; }
+    .sidebar { display: none !important; }
+    .main-content-header { display: none !important; }
+    .main-content { margin: 0 !important; padding: 0 !important; }
+    body { background: #fff !important; }
+    .certificate-modern { background: #fff !important; }
+    .glass-card { box-shadow: none !important; border: none !important; }
+}
+
+@media (max-width: 992px) {
+    .student-hero {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    .student-kpis { grid-template-columns: 1fr; }
+}

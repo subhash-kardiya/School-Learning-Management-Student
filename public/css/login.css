@@ -1,0 +1,83 @@
+:root {
+    --primary-color: #0056b3;
+    /* Royal Blue - Main Buttons/Headers */
+    --secondary-color: #ffc107;
+    /* Gold - Highlights/Accents */
+    --text-color: #333333;
+    /* Dark Grey - Readable Text */
+    --bg-color: #f8f9fa;
+    /* Light Grey - Page Background */
+    --card-bg: #ffffff;
+    /* White - Form Background */
+    --gradiant-start: #0056b3;
+    /* Gradient Start Color */
+    --gradiant-end: #002a5c;
+    /* Gradient End Color */
+}
+
+:root {
+    --font-heading: 'Poppins', sans-serif;
+    --font-body: 'Inter', sans-serif;
+}
+
+body {
+    font-family: var(--font-body);
+    /* Sets Inter as the default for everything */
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+.navbar-brand,
+.btn {
+    font-family: var(--font-heading);
+    /* Sets Poppins for titles and buttons */
+    letter-spacing: 0.5px;
+    /* Adds a tiny bit of space for a premium look */
+}
+
+/* Optional: Make input text very clear */
+input,
+select,
+textarea {
+    font-family: var(--font-body) !important;
+    font-weight: 500;
+}
+
+.left-side {
+    background: linear-gradient(135deg, var(--gradiant-start) 0%, var(--gradiant-end) 100%);
+}
+
+.btn {
+    background-color: var(--gradiant-start);
+    border: none;
+    color: white;
+}
+
+.btn:hover {
+    background-color: var(--gradiant-end);
+    color: white;
+}
+
+.forgot-txt {
+    color: var(--text-color);
+}
+
+/* Custom Responsive Height Class */
+.vh-responsive-50 {
+    height: 50vh;
+    /* Mobile: 50% of viewport height */
+    overflow-y: auto;
+    /* Adds scroll if content is too big for the box */
+}
+
+/* Bootstrap 'lg' Breakpoint is 992px */
+@media (min-width: 992px) {
+    .vh-responsive-50 {
+        height: 100vh;
+        /* Desktop: 100% of viewport height */
+    }
+}

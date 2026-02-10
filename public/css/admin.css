@@ -1,0 +1,1079 @@
+/* ======================================================
+   MODERN ADMIN PANEL – REAL WORLD ERP WHITE THEME
+====================================================== */
+
+/* ---------- ROOT VARIABLES ---------- */
+:root {
+    --admin-primary: #4f46e5;
+    --admin-secondary: #4338ca;
+    --admin-success: #10b981;
+    --admin-warning: #f59e0b;
+    --admin-danger: #ef4444;
+
+    --admin-bg: #f5f7fb;
+    --admin-card-bg: #ffffff;
+
+    --admin-text-main: #1e293b;
+    --admin-text-muted: #64748b;
+
+    --admin-border: #e6e8ec;
+}
+
+/* ---------- GLOBAL ---------- */
+body {
+    background: var(--admin-bg);
+    color: var(--admin-text-main);
+    font-size: 14px;
+    /* ✅ FIXED (10px was too small) */
+}
+
+/* ======================================================
+   PAGE HEADER
+====================================================== */
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.page-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.page-subtitle {
+    font-size: 0.9rem;
+    color: var(--admin-text-muted);
+}
+
+/* ======================================================
+   CARDS
+====================================================== */
+.card {
+    background: var(--admin-card-bg);
+    border: 1px solid var(--admin-border);
+    border-radius: 5px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, .03);
+}
+
+.card-header {
+    background: #fff;
+    border-bottom: 1px solid var(--admin-border);
+    padding: 14px 18px;
+}
+
+.card-header h5 {
+    font-weight: 600;
+    margin: 0;
+}
+
+.card-body {
+    padding: 18px;
+}
+.card-title {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 12px;
+}
+
+/* Stats Card */
+.stats-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #fff;
+    padding: 10px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    transition: transform 0.2s;
+}
+
+.stats-card:hover {
+    transform: translateY(-3px);
+}
+
+/* Stats Icon */
+.stats-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 9px;
+    width: 30px;
+    height: 30px;
+    border-radius: 5px;
+    color: #fff;
+}
+
+/* Icon Box (for dashboard stat cards) */
+.icon-box {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 50px;
+    height: 50px;
+    border-radius: 12px;
+    font-size: 1.5rem;
+}
+
+
+/* Color Variants */
+.stats-primary {
+    background-color: #5D59E0;
+}
+
+.stats-success {
+    background-color: #28a745;
+}
+
+.stats-warning {
+    background-color: #ffc107;
+}
+
+.stats-danger {
+    background-color: #dc3545;
+}
+
+/* List group item inside card */
+.list-group-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Notice Board Boxes - Using rgba() for proper transparency */
+.bg-primary.bg-opacity-10 {
+    background-color: rgba(93, 89, 224, 0.1) !important;
+}
+
+.bg-warning.bg-opacity-10 {
+    background-color: rgba(255, 193, 7, 0.1) !important;
+}
+
+.bg-success.bg-opacity-10 {
+    background-color: rgba(40, 167, 69, 0.1) !important;
+}
+
+.list-group-item button {
+    min-width: 80px;
+}
+
+/* ======================================================
+   TABLES / DATATABLE
+====================================================== */
+.table {
+    margin-bottom: 0;
+}
+
+.table thead th {
+    background: #f9fafb;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    font-weight: 600;
+    color: #64748b;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--admin-border);
+}
+
+.table tbody td {
+    padding: 12px 16px;
+    font-size: 0.9rem;
+    border-bottom: 1px solid #f1f5f9;
+    vertical-align: middle;
+}
+
+.table-hover tbody tr:hover {
+    background: #f8fafc;
+}
+
+/* ======================================================
+   DATATABLE TOP BAR
+====================================================== */
+.dataTables_wrapper .dataTables_length {
+    margin-left: 16px;
+}
+
+.dataTables_wrapper .dataTables_length select {
+    padding: 6px 10px;
+    border-radius: 6px;
+    border: 1px solid #e2e8f0;
+}
+
+.dataTables_wrapper .dataTables_filter {
+    margin-right: 16px;
+}
+
+.dataTables_wrapper .dataTables_filter input {
+    width: 260px;
+    padding: 8px 14px;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+}
+
+/* ======================================================
+   ACTION BUTTONS
+====================================================== */
+.btn-action {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    border: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all .2s ease;
+    margin-left: 6px;
+}
+
+.btn-edit-soft {
+    background: rgba(59, 130, 246, .12);
+    color: #2563eb;
+}
+
+.btn-edit-soft:hover {
+    background: rgba(59, 130, 246, .2);
+    transform: scale(1.05);
+}
+
+.btn-delete-soft {
+    background: rgba(239, 68, 68, .12);
+    color: #dc2626;
+}
+
+.btn-delete-soft:hover {
+    background: rgba(239, 68, 68, .2);
+    transform: scale(1.05);
+}
+
+.btn-action i {
+    pointer-events: none;
+}
+
+form.d-inline {
+    display: inline;
+}
+
+/* ======================================================
+   PAGINATION
+====================================================== */
+.dataTables_paginate .pagination {
+    gap: 6px;
+}
+
+.page-item .page-link {
+    border-radius: 6px;
+    border: none;
+    padding: 8px 14px;
+    color: #475569;
+}
+
+.page-item.active .page-link {
+    background: var(--admin-primary);
+    color: #fff;
+}
+
+/* ==============================
+   DATATABLE LENGTH FIX (FINAL)
+================================ */
+
+/* remove default label text safely */
+.dataTables_length label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    font-size: 14px;
+}
+
+/* hide "Show" text only */
+.dataTables_length label span {
+    display: none;
+}
+
+/* length select box */
+.dataTables_length select {
+    min-width: 80px;
+    height: 38px;
+    padding: 6px 10px;
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
+    background-color: #fff;
+    font-size: 14px;
+    line-height: 1.2;
+    cursor: pointer;
+}
+
+/* remove weird focus */
+.dataTables_length select:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, .15);
+    border-color: #4f46e5;
+}
+
+
+/* ======================================================
+   FORMS
+====================================================== */
+.form-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: #475569;
+    margin-bottom: 6px;
+}
+
+.form-control,
+.form-select {
+    border-radius: 8px;
+    border: 1px solid #dcdfe5;
+    padding: 10px 12px;
+    font-size: 0.9rem;
+}
+
+.form-control:focus {
+    border-color: var(--admin-primary);
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, .15);
+}
+
+/* ======================================================
+   BUTTONS
+====================================================== */
+.btn-primary {
+    background: var(--admin-primary);
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+}
+
+.btn-primary:hover {
+    background: var(--admin-secondary);
+}
+
+.btn-primary-fancy {
+    background: linear-gradient(135deg, var(--admin-primary), var(--admin-secondary));
+    border: none;
+    color: #fff;
+    padding: 10px 24px;
+    border-radius: 6px;
+    font-weight: 600;
+    box-shadow: 0 6px 18px rgba(79, 70, 229, .25);
+    transition: all .2s;
+}
+
+.btn-primary-fancy:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 24px rgba(79, 70, 229, .35);
+}
+
+/* ======================================================
+   PAGE BACKGROUND
+====================================================== */
+.academic-white {
+    background: #f8fafc;
+    min-height: 100vh;
+}
+
+
+
+
+/* subject show details  */
+
+/* SUBJECT UI */
+.subject-ui .chip {
+    background: #f1f5f9;
+    padding: 6px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    color: #334155
+}
+
+.chip-success {
+    background: #ecfdf5;
+    color: #047857
+}
+
+.chip-danger {
+    background: #fef2f2;
+    color: #b91c1c
+}
+
+
+.kpi-card {
+    display: flex;
+    gap: 14px;
+    align-items: center;
+    color: #fff;
+    padding: 18px;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, .08)
+}
+
+.kpi-card i {
+    font-size: 22px
+}
+
+.gradient-primary {
+    background: linear-gradient(135deg, #4f46e5, #6366f1)
+}
+
+.gradient-info {
+    background: linear-gradient(135deg, #0284c7, #38bdf8)
+}
+
+.gradient-success {
+    background: linear-gradient(135deg, #059669, #34d399)
+}
+
+
+.glass-card {
+    background: rgba(255, 255, 255, .9);
+    backdrop-filter: blur(6px);
+    border-radius: 18px;
+    padding: 22px;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, .06)
+}
+
+.section-title {
+    font-weight: 700;
+    margin-bottom: 14px
+}
+
+.detail-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px dashed #e5e7eb
+}
+
+.detail-row:last-child {
+    border-bottom: 0
+}
+
+
+.teacher-box {
+    display: flex;
+    gap: 14px;
+    align-items: center
+}
+
+.avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    background: #eef2ff;
+    color: #4f46e5;
+    display: flex;
+    align-items: center;
+    justify-content: center
+}
+
+
+.timeline {
+    padding-left: 18px;
+    position: relative
+}
+
+.timeline:before {
+    content: '';
+    position: absolute;
+    left: 6px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: #e5e7eb
+}
+
+.t-item {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 16px
+}
+
+.dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #6366f1;
+    margin-top: 4px
+}
+
+
+
+/* ================================
+   ROLE & PERMISSION – MODERN UI
+================================ */
+.glass-card {
+    background: #fff;
+    border-radius: 14px;
+    padding: 24px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, .05);
+}
+
+.section-title {
+    font-size: .85rem;
+    text-transform: uppercase;
+    font-weight: 700;
+    color: #6b7280;
+}
+
+.permission-module {
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.permission-header {
+    background: #f9fafb;
+    padding: 12px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+}
+
+.permission-body {
+    padding: 16px;
+}
+
+.perm-chip {
+    background: #f1f5f9;
+    border: 1px solid #e5e7eb;
+    padding: 8px 14px;
+    border-radius: 999px;
+    font-size: .75rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.perm-chip input {
+    display: none
+}
+
+.perm-chip:has(input:checked) {
+    background: linear-gradient(135deg, #4f46e5, #6366f1);
+    color: #fff;
+    border: none;
+}
+
+.permission-pill {
+    background: #eef2ff;
+    color: #4338ca;
+    font-size: .7rem;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 999px;
+    margin: 2px;
+    display: inline-block;
+}
+
+
+/* role page css */
+/* index */
+.permission-group-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: #475569;
+    margin-bottom: 10px;
+    margin-top: 15px;
+}
+
+.accordion-button {
+    padding: 0.8rem 1.2rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.accordion-button:not(.collapsed) {
+    color: var(--admin-primary);
+    background-color: #f0f4ff;
+}
+
+.accordion-body {
+    padding: 1rem 1.2rem;
+}
+
+/* edit */
+
+.permission-group-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: #475569;
+    margin-bottom: 10px;
+    margin-top: 15px;
+}
+
+.accordion-button {
+    padding: 0.8rem 1.2rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.accordion-button:not(.collapsed) {
+    color: var(--admin-primary);
+    background-color: #f0f4ff;
+}
+
+.accordion-body {
+    padding: 1rem 1.2rem;
+}
+
+
+/* teacher page  */
+
+/* PAGE HEADER */
+.page-title {
+    font-size: 1.6rem;
+    font-weight: 700;
+}
+
+.page-subtitle {
+    font-size: .875rem;
+    color: #6b7280;
+}
+
+/* FILTER BAR */
+.admin-filter-bar {
+    background: #f9fafb;
+    padding: .75rem 1rem;
+    border-radius: .75rem;
+    border: 1px solid #e5e7eb;
+}
+
+.filter-label {
+    font-weight: 600;
+}
+
+/* CARD */
+.admin-card {
+    border: 0;
+    border-radius: 1rem;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, .05);
+}
+
+/* TABLE */
+.admin-table thead th {
+    background: #f9fafb;
+    font-size: .75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #6b7280;
+}
+
+.admin-table tbody tr:hover {
+    background: #f9fafb;
+}
+
+/* teacher page */
+.faculty-avatar {
+    width: 42px;
+    height: 42px;
+    border-radius: 3px;
+    /* object-fit: cover; */
+}
+
+/* USERNAME + EMAIL */
+.teacher-username {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    border-radius: 5px;
+    background: #eef2ff;
+    color: #4338ca;
+    font-weight: 600;
+    font-size: .75rem;
+}
+
+.teacher-email {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #475569;
+    font-size: .85rem;
+}
+
+/* BADGES */
+.badge-soft-success {
+    background: #ecfdf5;
+    color: #059669;
+}
+
+.badge-soft-danger {
+    background: #fef2f2;
+    color: #dc2626;
+}
+
+/* teacher Show details Page  */
+
+
+  .btn-gradient-primary {
+      background: linear-gradient(135deg, #5D59E0, #7F56D9);
+      color: #fff;
+      border-radius: 5px;
+      padding: 0.5rem 1.25rem;
+      transition: all 0.3s;
+  }
+
+  .btn-gradient-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  }
+
+
+  .profile-card {
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(20px);
+
+  }
+
+
+  .avatar-wrapper {
+      width: 140px;
+      height: 140px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 0 auto;
+  }
+
+  .profile-avatar {
+      width: 140px;
+      height: 140px;
+      object-fit: cover;
+      border-radius: 10px;
+      border: 4px solid #fff;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+  }
+
+  .badge-gradient-success {
+      background: linear-gradient(135deg, #4ade80, #16a34a);
+      color: #fff;
+      transition: transform 0.2s;
+  }
+
+  .badge-gradient-danger {
+      background: linear-gradient(135deg, #f87171, #b91c1c);
+      color: #fff;
+      transition: transform 0.2s;
+  }
+
+  .badge-gradient-info {
+      background: linear-gradient(135deg, #60a5fa, #0284c7);
+      color: #fff;
+      transition: transform 0.2s;
+  }
+
+  .section-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(15px);
+      border-radius: 5px;
+      transition: all 0.3s;
+  }
+
+
+  .dossier-card {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px);
+      border-radius: 1rem;
+  }
+
+  /* teacher Edit page */
+
+.form-section {
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 1rem;
+      transition: all 0.3s;
+      padding: 2rem;
+  }
+
+  .form-section:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+  }
+
+  .btn-gradient-primary {
+      background: linear-gradient(135deg, #5D59E0, #7F56D9);
+      color: #fff;
+      border-radius: 10px;
+      transition: all 0.3s;
+  }
+
+  .btn-gradient-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  }
+
+  .btn-rounded {
+      border-radius: 10px;
+  }
+
+/* teacher edit page */
+
+.form-section {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 1rem;
+    transition: all 0.3s;
+    padding: 2rem;
+}
+
+.form-section:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+}
+
+.btn-gradient-primary {
+    background: linear-gradient(135deg, #5D59E0, #7F56D9);
+    color: #fff;
+    border-radius: 10px;
+    transition: all 0.3s;
+}
+
+.btn-gradient-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+.btn-rounded {
+    border-radius: 10px;
+}
+
+/* teacher create page  */
+
+.form-card {
+     background: rgba(255, 255, 255, 0.95);
+     backdrop-filter: blur(15px);
+     border-radius: 1.5rem;
+     transition: all 0.3s;
+ }
+
+ .form-card:hover {
+     transform: translateY(-2px);
+     box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1);
+ }
+
+ .form-control-modern,
+ .form-select-modern,
+ textarea.form-control-modern {
+     border-radius: 10px;
+     padding: 0.625rem 1rem;
+     border: 1px solid #ddd;
+     transition: all 0.3s;
+ }
+
+ .form-control-modern:focus,
+ .form-select-modern:focus {
+     border-color: #5D59E0;
+     box-shadow: 0 0 10px rgba(93, 89, 224, 0.3);
+ }
+
+ .btn-gradient-primary {
+     background: linear-gradient(135deg, #5D59E0, #7F56D9);
+     color: #fff;
+     border-radius: 10px;
+     transition: all 0.3s;
+ }
+
+ .btn-gradient-primary:hover {
+     transform: translateY(-2px);
+     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+ }
+
+ .btn-rounded {
+     border-radius: 10px;
+ }
+
+/* students index page  */
+
+
+.glass-card {
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(15px);
+    border-radius: 1rem;
+    transition: all 0.3s;
+}
+
+
+
+.btn-gradient-primary {
+    background: linear-gradient(135deg, #5D59E0, #7F56D9);
+    color: #fff;
+    border-radius: .8rem;
+    transition: all 0.3s;
+}
+
+.btn-gradient-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+}
+
+#students-table th,
+#students-table td {
+    vertical-align: middle;
+    border-top: none;
+}
+
+#students-table tbody tr:hover {
+    background-color: rgba(93, 89, 224, 0.05);
+}
+
+.student-info {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.student-info img {
+    width: 45px;
+    height: 45px;
+    border-radius: 5px;
+    border: 2px solid #fff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.username-badge {
+    background: #E5E5FF;
+    color: #5D59E0;
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.status-badge {
+    padding: 3px 8px;
+    border-radius: 10px;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.status-active {
+    background-color: #D1FCD3;
+    color: #28A745;
+}
+
+.status-inactive {
+    background-color: #FCDADA;
+    color: #DC3545;
+}
+
+.action-btn {
+    border: none;
+    background: #f0f0f0;
+    color: #555;
+    width: 36px;
+    height: 36px;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.action-btn:hover {
+    background: #ddd;
+    color: #000;
+}
+
+/* student Show page  */
+
+.profile-card {
+    background: #fff;
+    border-radius: 5px;
+    padding: 5px;
+    box-shadow: 0 20px 45px rgba(0, 0, 0, .06);
+    text-align: center;
+}
+
+.profile-img {
+    width: 130px;
+    height: 130px;
+    border-radius: 5px;
+    /* object-fit: cover; */
+    box-shadow: 0 15px 30px rgba(0, 0, 0, .15);
+}
+
+.badge {
+    padding: 6px 14px;
+    border-radius: 5px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.badge.role {
+    background: #e0e7ff;
+    color: #3730a3;
+}
+
+.badge.active {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.badge.inactive {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.section-title {
+    font-size: 13px;
+    text-transform: uppercase;
+    font-weight: 700;
+    margin-bottom: 14px;
+}
+
+.contact-item {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 5px;
+    text-align: left;
+}
+
+.contact-item i {
+    font-size: 18px;
+    color: #6366f1;
+    margin-top: 4px;
+}
+
+.contact-item small {
+    color: #6b7280;
+}
+
+.detail-card {
+    background: #fff;
+    border-radius: 5px;
+    padding: 10px;
+    margin-bottom: 5px;
+    box-shadow: 0 20px 45px rgba(0, 0, 0, .06);
+}
+
+.detail-card h5 {
+    font-weight: 700;
+    margin-bottom: 18px;
+    color: #4338ca;
+}
+
+.detail-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+}
+
+.detail-grid .full {
+    grid-column: 1/-1;
+}
+
+.detail-grid small {
+    color: #6b7280;
+    font-size: 12px;
+}
+
+.detail-grid strong {
+    display: block;
+    margin-top: 4px;
+}
+
