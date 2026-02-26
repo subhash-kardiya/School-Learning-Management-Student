@@ -10,13 +10,12 @@ class Certificate extends Model
         'student_id',
         'certificate_no',
         'certificate_type',
-        'class_id',
         'academic_year_id',
         'issue_date',
         'reason',
+        'conduct',
+        'remarks',
         'status',
-        'approved_by',
-        'created_by',
     ];
 
     public function student()
@@ -27,10 +26,5 @@ class Certificate extends Model
     public function academicYear()
     {
         return $this->belongsTo(AcademicYear::class, 'academic_year_id');
-    }
-
-    public function class()
-    {
-        return $this->belongsTo(Classes::class, 'class_id');
     }
 }

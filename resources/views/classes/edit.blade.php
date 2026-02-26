@@ -3,7 +3,7 @@
 @section('title', 'Edit Class')
 
 @section('content')
-    <div class="container-fluid academic-white py-4 class-module-compact">
+    <div class="container-fluid academic-white py-4">
 
         <!-- PAGE HEADER -->
         <div class="page-header mb-3">
@@ -25,48 +25,31 @@
                     </div>
 
                     <div class="card-body p-4">
-                        @if ($errors->any())
-                            <div class="alert alert-danger">
-                                Please fix the highlighted fields and try again.
-                            </div>
-                        @endif
-
                         <form action="{{ route('classes.update', $class->id) }}" method="POST">
                             @csrf
                             @method('PUT')
 
-                            <?php if(session('success')): ?>
-                            <div class="alert alert-success border-0 shadow-sm mb-3">
-                                <?php echo e(session('success')); ?>
-
-                            </div>
-                            <?php endif; ?>
-                            <?php if(session('error')): ?>
-                            <div class="alert alert-danger border-0 shadow-sm mb-3">
-                                <?php echo e(session('error')); ?>
-
-                            </div>
-                            <?php endif; ?>
-
+                            @if ($errors->any())
+                                <div class="alert alert-danger border-0 mb-4">
+                                    <ul class="mb-0 small">
+                                        @foreach ($errors->all() as $error)
+                                            <li>{{ $error }}</li>
+                                        @endforeach
+                                    </ul>
+                                </div>
+                            @endif
 
                             <!-- ROW 1 -->
                             <div class="row g-4">
                                 <div class="col-md-6">
                                     <label class="form-label">Class Name</label>
-                                    <input type="text" name="name"
-                                        class="form-control @error('name') is-invalid @enderror"
-                                        value="{{ old('name', $class->name) }}" placeholder="e.g. Class 10-A">
-
-                                    @error('name')
-                                        <div class="invalid-feedback d-block">{{ $message }}</div>
-                                    @enderror
-
+                                    <input type="text" name="name" class="form-control"
+                                        value="{{ old('name', $class->name) }}" placeholder="e.g. Class 10-A" required>
                                 </div>
 
                                 <div class="col-md-6">
                                     <label class="form-label">Academic Year</label>
-                                    <select name="academic_year_id"
-                                        class="form-select @error('academic_year_id') is-invalid @enderror">
+                                    <select name="academic_year_id" class="form-select" required>
                                         <option value="">Select Academic Year</option>
                                         @foreach ($academicYears as $year)
                                             <option value="{{ $year->id }}"
@@ -75,9 +58,6 @@
                                             </option>
                                         @endforeach
                                     </select>
-                                    @error('academic_year_id')
-                                        <div class="invalid-feedback d-block">{{ $message }}</div>
-                                    @enderror
                                 </div>
                             </div>
 
@@ -85,8 +65,7 @@
                             <div class="row g-4 mt-2">
                                 <div class="col-md-6">
                                     <label class="form-label">Class Teacher</label>
-                                    <select name="class_teacher_id"
-                                        class="form-select @error('class_teacher_id') is-invalid @enderror">
+                                    <select name="class_teacher_id" class="form-select" required>
                                         <option value="">Select Teacher</option>
                                         @foreach ($teachers as $teacher)
                                             <option value="{{ $teacher->id }}"
@@ -95,14 +74,11 @@
                                             </option>
                                         @endforeach
                                     </select>
-                                    @error('class_teacher_id')
-                                        <div class="invalid-feedback d-block">{{ $message }}</div>
-                                    @enderror
                                 </div>
 
                                 <div class="col-md-6">
                                     <label class="form-label">Status</label>
-                                    <select name="status" class="form-select @error('status') is-invalid @enderror">
+                                    <select name="status" class="form-select" required>
                                         <option value="1" {{ old('status', $class->status) == 1 ? 'selected' : '' }}>
                                             Active
                                         </option>
@@ -110,9 +86,6 @@
                                             Inactive
                                         </option>
                                     </select>
-                                    @error('status')
-                                        <div class="invalid-feedback d-block">{{ $message }}</div>
-                                    @enderror
                                 </div>
                             </div>
 
@@ -136,8 +109,4 @@
         </div>
 
     </div>
-@push('css')
-    <link rel="stylesheet" href="{{ asset('css/resize/class-compact.css') }}">
-@endpush
-
 @endsection

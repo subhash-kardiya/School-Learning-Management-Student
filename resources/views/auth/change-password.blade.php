@@ -41,20 +41,12 @@
                     @csrf
                     <div class="mb-3">
                         <label class="form-label forgot-txt">New Password</label>
-                        <input type="password" name="password" class="form-control @error('password') is-invalid @enderror"
-                            placeholder="******" minlength="8" required>
-                        @error('password')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
+                        <input type="password" name="password" class="form-control" placeholder="******" required>
                     </div>
                     <div class="mb-4">
                         <label class="form-label forgot-txt">Confirm Password</label>
-                        <input type="password" name="password_confirmation"
-                            class="form-control @error('password_confirmation') is-invalid @enderror" placeholder="******"
-                            minlength="8" required>
-                        @error('password_confirmation')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
+                        <input type="password" name="password_confirmation" class="form-control" placeholder="******"
+                            required>
                     </div>
                     <button type="submit" class="btn w-100 fs-6">Update Password</button>
                 </form>

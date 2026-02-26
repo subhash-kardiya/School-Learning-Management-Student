@@ -3,31 +3,22 @@
 @section('title', 'My Certificates')
 
 @section('content')
-    <div class="container-fluid py-4 certificate-modern certificate-module-compact">
-        @if (session('success'))
-            <div class="alert alert-success border-0 shadow-sm mb-3">{{ session('success') }}</div>
-        @endif
-        @if (session('error'))
-            <div class="alert alert-danger border-0 shadow-sm mb-3">{{ session('error') }}</div>
-        @endif
+    <div class="container-fluid py-4 certificate-modern">
         @php
             $roleLabel = ucfirst(session('role') ?? 'student');
-            $canView =
-                auth()->user() && method_exists(auth()->user(), 'hasPermission')
-                    ? (auth()->user()->hasPermission('certificate_view')
-                        ? 'Allowed'
-                        : 'Denied')
-                    : 'N/A';
+            $canView = auth()->user() && method_exists(auth()->user(), 'hasPermission')
+                ? (auth()->user()->hasPermission('certificate_view') ? 'Allowed' : 'Denied')
+                : 'N/A';
         @endphp
 
         <div class="student-hero mb-4">
             <div>
                 <h4 class="mb-1">My Certificates</h4>
-                <p class="text-muted small mb-0">Only approved certificates are shown here</p>
+                <p class="text-muted small mb-0">Issued certificates only</p>
             </div>
             <div class="hero-meta">
-
-                <a href="{{ route('student.certificate.create') }}" class="btn btn-modern btn-sm ms-2">Request Certificate</a>
+                <span class="pill">Role: {{ $roleLabel }}</span>
+                <span class="pill pill-secondary">Permission: {{ $canView }}</span>
             </div>
         </div>
 
@@ -36,22 +27,22 @@
                 <div class="kpi-icon"><i class="fas fa-certificate"></i></div>
                 <div>
                     <div class="kpi-label">Total Issued</div>
-                    <div class="kpi-value">{{ $certificates->where('status', 'approved')->count() }}</div>
+                    <div class="kpi-value">{{ $certificates->count() }}</div>
                 </div>
             </div>
             <div class="kpi-card kpi-alt">
                 <div class="kpi-icon"><i class="fas fa-print"></i></div>
                 <div>
                     <div class="kpi-label">Ready To Print</div>
-                    <div class="kpi-value">{{ $certificates->where('status', 'approved')->count() }}</div>
+                    <div class="kpi-value">{{ $certificates->count() }}</div>
                 </div>
             </div>
         </div>
 
-        <div class="card glass-card modern-list-card">
+        <div class="card glass-card">
             <div class="card-body p-0">
                 <div class="table-responsive">
-                    <table class="table table-modern certificate-table align-middle mb-0">
+                    <table class="table table-modern align-middle mb-0">
                         <thead>
                             <tr>
                                 <th>Certificate No</th>
@@ -64,27 +55,18 @@
                         <tbody>
                             @forelse ($certificates as $c)
                                 <tr>
-                                    <td><span class="cert-no">{{ $c->certificate_no }}</span></td>
-                                    <td><span class="chip chip-soft">{{ ucfirst($c->certificate_type) }}</span></td>
-                                    <td>{{ $c->issue_date ? \Illuminate\Support\Carbon::parse($c->issue_date)->format('d-m-Y') : '-' }}
-                                    </td>
-                                    <td>
-                                        <span
-                                            class="badge
-                                            {{ $c->status === 'approved' ? 'bg-success' : '' }}
-                                            {{ $c->status === 'pending' ? 'bg-warning text-dark' : '' }}
-                                            {{ $c->status === 'rejected' ? 'bg-danger' : '' }}">
-                                            {{ ucfirst($c->status) }}
-                                        </span>
-                                    </td>
+                                    <td>{{ $c->certificate_no }}</td>
+                                    <td>{{ ucfirst($c->certificate_type) }}</td>
+                                    <td>{{ $c->issue_date }}</td>
+                                    <td><span class="badge bg-success">Issued</span></td>
                                     <td class="text-end">
-                                        <a href="{{ route('student.certificate.show', $c->id) }}"
-                                            class="btn btn-sm btn-soft">View</a>
+                                        <a href="{{ route('student.certificate.show', $c->id) }}" class="btn btn-sm btn-soft">View</a>
+                                        <a href="{{ route('student.certificate.show', $c->id) }}?print=1" class="btn btn-sm btn-modern" target="_blank">Print</a>
                                     </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="5" class="text-center text-muted py-4">No approved certificates.</td>
+                                    <td colspan="5" class="text-center text-muted py-4">No issued certificates.</td>
                                 </tr>
                             @endforelse
                         </tbody>
@@ -98,5 +80,4 @@
 
 @push('css')
     <link rel="stylesheet" href="{{ asset('css/certificate.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/resize/certificate-compact.css') }}">
 @endpush

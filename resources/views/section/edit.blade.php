@@ -3,7 +3,7 @@
 @section('title', 'Edit Section')
 
 @section('content')
-    <div class="container-fluid py-4 section-module-compact">
+    <div class="container-fluid py-4">
 
         <!-- Header Section -->
         <div class="d-flex justify-content-between align-items-center mb-4">
@@ -22,25 +22,28 @@
                         <h5 class="mb-0 fw-bold">Section Information</h5>
                     </div>
                     <div class="card-body p-4">
-                        @if ($errors->any())
-                            <div class="alert alert-danger">
-                                Please Fix the hignlighted fields and try again.
-                            </div>
-                        @endif
                         <form action="{{ route('section.update', $section->id) }}" method="POST">
                             @csrf
                             @method('PUT')
 
-
+                            <!-- Validation Errors -->
+                            @if ($errors->any())
+                                <div class="alert alert-danger border-0 shadow-sm mb-4">
+                                    <ul class="mb-0 small">
+                                        @foreach ($errors->all() as $error)
+                                            <li>{{ $error }}</li>
+                                        @endforeach
+                                    </ul>
+                                </div>
+                            @endif
 
                             <!-- Form Fields -->
                             <div class="row g-4 mb-4">
                                 <!-- Section Name -->
                                 <div class="col-md-4">
-                                    <label for="name" class="form-label fw-semibold ">Section Name</label>
-                                    <input type="text" class="form-control shadow-sm @error('name') is-invalid @enderror"
-                                        name="name" value="{{ old('name', $section->name) }}"
-                                        placeholder="e.g. Section A">
+                                    <label for="name" class="form-label fw-semibold">Section Name</label>
+                                    <input type="text" class="form-control shadow-sm" name="name"
+                                        value="{{ old('name', $section->name) }}" placeholder="e.g. Section A" required>
                                     @error('name')
                                         <small class="text-danger">{{ $message }}</small>
                                     @enderror
@@ -49,8 +52,7 @@
                                 <!-- Assigned Class -->
                                 <div class="col-md-4">
                                     <label for="class_id" class="form-label fw-semibold">Assigned Class</label>
-                                    <select name="class_id"
-                                        class="form-select shadow-sm @error('class_id') is-invalid @enderror">
+                                    <select name="class_id" class="form-select shadow-sm" required>
                                         <option value="">Select Class</option>
                                         @foreach ($classes as $class)
                                             <option value="{{ $class->id }}"
@@ -67,10 +69,8 @@
                                 <!-- Capacity -->
                                 <div class="col-md-4">
                                     <label for="capacity" class="form-label fw-semibold">Capacity</label>
-                                    <input type="number"
-                                        class="form-control shadow-sm @error('capacity') is-invalid @enderror"
-                                        name="capacity" min="1" value="{{ old('capacity', $section->capacity) }}"
-                                        placeholder="e.g. 40">
+                                    <input type="number" class="form-control shadow-sm" name="capacity" min="1"
+                                        value="{{ old('capacity', $section->capacity) }}" placeholder="e.g. 40" required>
                                     @error('capacity')
                                         <small class="text-danger">{{ $message }}</small>
                                     @enderror
@@ -79,10 +79,8 @@
                                 <!-- Status -->
                                 <div class="col-md-4">
                                     <label for="status" class="form-label fw-semibold">Status</label>
-                                    <select name="status"
-                                        class="form-select shadow-sm @error('status') is-invalid @enderror">
-                                        <option value="1"
-                                            {{ old('status', $section->status) == 1 ? 'selected' : '' }}>
+                                    <select name="status" class="form-select shadow-sm" required>
+                                        <option value="1" {{ old('status', $section->status) == 1 ? 'selected' : '' }}>
                                             Active</option>
                                         <option value="0"
                                             {{ old('status', $section->status) == 0 ? 'selected' : '' }}>Inactive</option>
@@ -131,7 +129,3 @@
         }
     </style>
 @endsection
-
-@push('css')
-    <link rel="stylesheet" href="{{ asset('css/resize/section-compact.css') }}">
-@endpush

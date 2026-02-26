@@ -9,7 +9,7 @@ class TeacherMapping extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['teacher_id', 'section_id', 'subject_id', 'room_id'];
+    protected $fillable = ['teacher_id', 'section_id', 'subject_id'];
 
     public function teacher()
     {
@@ -25,10 +25,4 @@ class TeacherMapping extends Model
     {
         return $this->belongsTo(Subject::class);
     }
-
-    public function room()
-    {
-        return $this->belongsTo(Room::class);
-    }
-
 }

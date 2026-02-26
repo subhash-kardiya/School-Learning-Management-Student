@@ -54,9 +54,6 @@ return [
 
     'url' => env('APP_URL', 'http://localhost'),
 
-    'certificate_principal_name' => env('CERTIFICATE_PRINCIPAL_NAME', 'Principal'),
-    'certificate_principal_title' => env('CERTIFICATE_PRINCIPAL_TITLE', 'Principal'),
-
     /*
     |--------------------------------------------------------------------------
     | Application Timezone
@@ -68,7 +65,7 @@ return [
     |
     */
 
-    'timezone' => env('APP_TIMEZONE', 'Asia/Kolkata'),
+    'timezone' => 'UTC',
 
     /*
     |--------------------------------------------------------------------------

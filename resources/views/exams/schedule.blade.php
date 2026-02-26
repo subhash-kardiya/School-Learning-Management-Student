@@ -1,136 +1,195 @@
 @extends('layouts.admin')
 
-@section('title', 'Exam Subject Setup')
+@section('title', 'Exam Schedule')
 
 @section('content')
-    @php
-        $isTeacherRole = session('role') === 'teacher';
-        $examMarksRoute = $isTeacherRole ? 'teacher.exams.marks' : 'exams.marks';
-        $examScheduleStoreRoute = $isTeacherRole ? 'teacher.exams.schedule.store' : 'exams.schedule.store';
-    @endphp
-    <div class="container-fluid py-4">
-        @if (session('success'))
-            <div class="alert alert-success border-0 shadow-sm mb-3">{{ session('success') }}</div>
-        @endif
-        @if ($errors->any())
-            <div class="alert alert-danger border-0 shadow-sm mb-3">Please correct the highlighted fields.</div>
-        @endif
+<div class="container-fluid py-4">
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Exam Schedule</h5>
+            
+        </div>
 
-        <div class="card border-0 shadow-sm mb-4">
-            <div class="card-header bg-white">
-                <h5 class="mb-0">Step 2: Subject-wise Exam Entry ({{ $globalAcademicYears->firstWhere('id', $yearId)->name ?? 'No Year Selected' }})</h5>
-            </div>
-            <div class="card-body">
-                <form method="GET" class="row g-3 align-items-end">
-                    <div class="col-md-8">
-                        <label class="form-label small fw-bold">Select Exam</label>
-                        <select name="exam_id" class="form-select" onchange="this.form.submit()">
-                            <option value="">Select Exam</option>
-                            @foreach ($exams as $exam)
-                                <option value="{{ $exam->id }}" {{ (string) optional($selectedExam)->id === (string) $exam->id ? 'selected' : '' }}>
-                                    {{ $exam->name }} | {{ $exam->class?->name }}-{{ $exam->section?->name }} | {{ $exam->start_date }}
+        <div class="card-body">
+            @if(!in_array(session('role'), ['student', 'parent']))
+                <form id="scheduleFilterForm" action="{{ route('exams.schedule') }}" method="GET" class="row g-3 mb-4 align-items-end justify-content-end">
+                    <div class="col-md-2 col-lg-2">
+                        <label for="academic_year_id" class="form-label">Academic Year</label>
+                        <select name="academic_year_id" id="academic_year_id" class="form-select">
+                            <option value="">All Academic Years</option>
+                            @foreach($academicYears as $year)
+                                <option value="{{ $year->id }}" {{ (isset($selectedAcademicYear) && $selectedAcademicYear == $year->id) ? 'selected' : '' }}>{{ $year->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-2 col-lg-2">
+                        <label for="class_id" class="form-label">Class</label>
+                        <select name="class_id" id="class_id" class="form-select">
+                            <option value="">Class 1</option>
+                            @foreach($classes as $class)
+                                <option value="{{ $class->id }}" {{ (isset($selectedClass) && (string)$selectedClass === (string)$class->id) ? 'selected' : '' }}>{{ $class->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-2 col-lg-2">
+                        <label for="section_id" class="form-label">Section</label>
+                        <select name="section_id" id="section_id" class="form-select">
+                            <option value="">Section A</option>
+                            @foreach($sections as $section)
+                                <option value="{{ $section->id }}" data-class="{{ $section->class_id }}" {{ (isset($selectedSection) && (string)$selectedSection === (string)$section->id) ? 'selected' : '' }}>
+                                    {{ $section->name }}
                                 </option>
                             @endforeach
                         </select>
                     </div>
-                    <div class="col-md-4 text-end">
-                        <a href="{{ route($examMarksRoute, ['exam_id' => optional($selectedExam)->id]) }}" class="btn btn-outline-primary">Go To Step 3</a>
-                    </div>
                 </form>
-
-                @if ($selectedExam)
-                    <hr>
-                    <form method="POST" action="{{ route($examScheduleStoreRoute) }}" class="row g-3 align-items-end">
-                        @csrf
-                        <input type="hidden" name="exam_id" value="{{ $selectedExam->id }}">
-                        <div class="col-md-6">
-                            <label class="form-label small fw-bold">Subject</label>
-                            <select name="subject_id" class="form-select @error('subject_id') is-invalid @enderror" required>
-                                <option value="">Select Subject</option>
-                                @foreach ($subjects as $subject)
-                                    <option value="{{ $subject->id }}" {{ (string) old('subject_id') === (string) $subject->id ? 'selected' : '' }}>
-                                        {{ $subject->name }}
-                                    </option>
-                                @endforeach
-                            </select>
-                            @error('subject_id')
-                                <div class="invalid-feedback d-block">{{ $message }}</div>
-                            @enderror
-                        </div>
-                        <div class="col-md-2">
-                            <label class="form-label small fw-bold">Theory</label>
-                            <input type="number" step="0.01" name="theory_marks" class="form-control @error('theory_marks') is-invalid @enderror" min="0" value="{{ old('theory_marks', 0) }}">
-                            @error('theory_marks')
-                                <div class="invalid-feedback d-block">{{ $message }}</div>
-                            @enderror
-                        </div>
-                        <div class="col-md-2">
-                            <label class="form-label small fw-bold">Practical</label>
-                            <input type="number" step="0.01" name="practical_marks" class="form-control @error('practical_marks') is-invalid @enderror" min="0" value="{{ old('practical_marks', 0) }}">
-                            @error('practical_marks')
-                                <div class="invalid-feedback d-block">{{ $message }}</div>
-                            @enderror
-                        </div>
-                        <div class="col-md-2">
-                            <label class="form-label small fw-bold">Internal</label>
-                            <input type="number" step="0.01" name="internal_marks" class="form-control @error('internal_marks') is-invalid @enderror" min="0" value="{{ old('internal_marks', 0) }}">
-                            @error('internal_marks')
-                                <div class="invalid-feedback d-block">{{ $message }}</div>
-                            @enderror
-                        </div>
-                        <div class="col-md-2">
-                            <label class="form-label small fw-bold">Passing</label>
-                            <input type="number" step="0.01" name="passing_marks" class="form-control @error('passing_marks') is-invalid @enderror" min="0" value="{{ old('passing_marks', 33) }}" required>
-                            @error('passing_marks')
-                                <div class="invalid-feedback d-block">{{ $message }}</div>
-                            @enderror
-                        </div>
-                        <div class="col-md-2">
-                            <button class="btn btn-primary-fancy w-100">Save</button>
-                        </div>
-                    </form>
-                @endif
-            </div>
-        </div>
-
-        <div class="card border-0 shadow-sm">
-            <div class="card-header bg-white">
-                <h5 class="mb-0">Subjects Mapped To Exam</h5>
-            </div>
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
-                        <thead>
+            @endif
+            <h5 class="mb-3">Exam List</h5>
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Exam Name</th>
+                            <th>Class & Section</th>
+                            <th>Subject Name</th>
+                            <th>Start Date</th>
+                            <th>End Date</th>
+                            <th>Time</th>
+                            <th>Room No</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($exams as $exam)
                             <tr>
-                                <th>Exam</th>
-                                <th>Subject</th>
-                                <th>Theory</th>
-                                <th>Practical</th>
-                                <th>Internal</th>
-                                <th>Passing</th>
-                                <th>Total Marks</th>
+                                <td>{{ $exam->name }}</td>
+                                <td>{{ $exam->class->name ?? '-' }}{{ $exam->section ? ' - ' . $exam->section->name : '' }}</td>
+                                <td>{{ $exam->subject_name }}</td>
+                                <td>{{ $exam->start_date?->format('Y-m-d') ?? '-' }}</td>
+                                <td>{{ $exam->end_date?->format('Y-m-d') ?? '-' }}</td>
+                                <td>
+                                    @if($exam->start_time)
+                                        {{ \Carbon\Carbon::parse($exam->start_time)->format('h:i A') }} - {{ $exam->end_time ? \Carbon\Carbon::parse($exam->end_time)->format('h:i A') : '' }}
+                                    @else
+                                        -
+                                    @endif
+                                </td>
+                                <td>{{ $exam->room_no ?? '-' }}</td>
+                               
                             </tr>
-                        </thead>
-                        <tbody>
-                            @forelse ($examSubjects as $row)
-                                <tr>
-                                    <td>{{ $selectedExam?->name }}</td>
-                                    <td>{{ $row->subject?->name }}</td>
-                                    <td>{{ $row->theory_marks }}</td>
-                                    <td>{{ $row->practical_marks }}</td>
-                                    <td>{{ $row->internal_marks }}</td>
-                                    <td>{{ $row->passing_marks }}</td>
-                                    <td>{{ $row->total_marks }}</td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="7" class="text-center text-muted py-4">No subjects added yet.</td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
+                        @empty
+                            <tr>
+                                <td colspan="7" class="text-center text-muted">No exams found.</td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
+</div>
 @endsection
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        if (['student', 'parent'].includes("{{ session('role') }}")) return;
+
+        const form = document.getElementById('scheduleFilterForm');
+        if (!form) return;
+
+        const classField = document.getElementById('class_id');
+        const sectionField = document.getElementById('section_id');
+        const yearField = document.getElementById('academic_year_id');
+
+        function selectFirstVisibleOption(selectElement) {
+            if (!selectElement) return;
+            const firstVisible = Array.from(selectElement.options).find(opt => opt.value !== '' && !opt.hidden);
+            selectElement.value = firstVisible ? firstVisible.value : '';
+        }
+
+        function selectPreferredOptionByText(selectElement, preferredTexts = []) {
+            if (!selectElement) return false;
+            const normalizedPreferred = preferredTexts.map(t => String(t).trim().toLowerCase());
+            const candidate = Array.from(selectElement.options).find(opt => {
+                if (opt.value === '' || opt.hidden) return false;
+                const label = String(opt.textContent || '').trim().toLowerCase();
+                return normalizedPreferred.includes(label);
+            });
+            if (!candidate) return false;
+            selectElement.value = candidate.value;
+            return true;
+        }
+
+        function filterSectionsByClass() {
+            if (!classField || !sectionField) return;
+            const selectedClass = classField.value;
+            Array.from(sectionField.options).forEach(function (option) {
+                if (option.value === '') return;
+                const optionClass = option.getAttribute('data-class');
+                const hidden = selectedClass && optionClass !== selectedClass;
+                option.hidden = hidden;
+                option.style.display = hidden ? 'none' : '';
+            });
+
+            const selectedOption = sectionField.selectedOptions[0];
+            if (sectionField.value && selectedOption && selectedOption.hidden) {
+                sectionField.value = '';
+            }
+        }
+
+        function initializeDefaultFilters() {
+            let changed = false;
+
+            if (classField && !classField.value) {
+                const classPicked = selectPreferredOptionByText(classField, ['Class 1']);
+                if (!classPicked) {
+                    selectFirstVisibleOption(classField);
+                }
+                changed = !!classField.value;
+            }
+
+            filterSectionsByClass();
+
+            if (sectionField && !sectionField.value) {
+                const sectionPicked = selectPreferredOptionByText(sectionField, ['Section A', 'A']);
+                if (!sectionPicked) {
+                    selectFirstVisibleOption(sectionField);
+                }
+                changed = changed || !!sectionField.value;
+            }
+
+            if (changed) {
+                form.submit();
+            }
+        }
+
+        if (yearField) {
+            yearField.addEventListener('change', function () {
+                form.submit();
+            });
+        }
+
+        if (classField) {
+            classField.addEventListener('change', function () {
+                filterSectionsByClass();
+                if (sectionField && !sectionField.value) {
+                    const sectionPicked = selectPreferredOptionByText(sectionField, ['Section A', 'A']);
+                    if (!sectionPicked) {
+                        selectFirstVisibleOption(sectionField);
+                    }
+                }
+                form.submit();
+            });
+        }
+
+        if (sectionField) {
+            sectionField.addEventListener('change', function () {
+                form.submit();
+            });
+        }
+
+        filterSectionsByClass();
+        initializeDefaultFilters();
+    });
+</script>
+@endpush

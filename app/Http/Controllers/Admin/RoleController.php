@@ -44,7 +44,8 @@ class RoleController extends Controller
                 ->make(true);
         }
 
-        return view('roles.index');
+        $permissions = Permission::all();
+        return view('roles.index', compact('permissions'));
     }
 
     /**
@@ -55,7 +56,7 @@ class RoleController extends Controller
     public function create()
     {
         $permissions = Permission::all();
-        return view('roles.create', compact('permissions'));
+        return view('roles.index', compact('permissions'));
     }
 
     /**
@@ -67,18 +68,16 @@ class RoleController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name' => 'required|string|max:255|unique:roles,name',
-            'description' => 'required|string|max:500',
-            'permissions' => 'required|array|min:1',
-            'permissions.*' => 'exists:permissions,id',
-        ], [
-            'permissions.required' => 'Please select at least one permission.',
-            'permissions.min' => 'Please select at least one permission.',
+            'name' => 'required|unique:roles,name',
+            'description' => 'nullable|string',
+            'permissions' => 'array'
         ]);
 
         $role = Role::create($request->only(['name', 'description']));
 
-        $role->permissions()->sync($request->input('permissions', []));
+        if ($request->has('permissions')) {
+            $role->permissions()->sync($request->permissions);
+        }
 
         return redirect()->route('roles.index')->with('success', 'Role created successfully.');
     }
@@ -107,7 +106,7 @@ class RoleController extends Controller
     {
         $request->validate([
             'name' => 'required|unique:roles,name,' . $role->id,
-            'description' => 'string',
+            'description' => 'nullable|string',
             'permissions' => 'array'
         ]);
 

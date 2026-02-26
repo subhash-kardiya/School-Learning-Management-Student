@@ -45,12 +45,8 @@
 
                     <div class="mb-4">
                         <label for="resetEmail" class="form-label forgot-txt">Email address</label>
-                        <input type="email" name="email" class="form-control @error('email') is-invalid @enderror"
-                            id="resetEmail" placeholder="Enter your registered email" value="{{ old('email') }}"
-                            required>
-                        @error('email')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
+                        <input type="email" name="email" class="form-control" id="resetEmail"
+                            placeholder="Enter your registered email" required>
                     </div>
 
                     <button type="submit" class="btn w-100 fs-6 mb-3">Send OTP</button>

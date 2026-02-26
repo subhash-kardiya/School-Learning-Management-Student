@@ -12,7 +12,6 @@ class Student extends Authenticatable
 
     protected $fillable = [
         'role_id',
-        'school_id',
         'student_name',
         'roll_no',
         'username',
