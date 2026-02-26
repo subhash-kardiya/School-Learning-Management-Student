@@ -3,7 +3,7 @@
 @section('title', 'Child Timetable')
 
 @section('content')
-    <div class="container-fluid py-4">
+    <div class="container-fluid py-4 timetable-module-compact">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
                 <h5 class="mb-1">Child Timetable</h5>

@@ -1,76 +1,49 @@
-<?php $__env->startSection('title', 'Student Profile'); ?>
+<?php $__env->startSection('title', 'Student Full Profile'); ?>
+<?php $__env->startPush('css'); ?>
+<link rel="stylesheet" href="<?php echo e(asset('css/student-show.css')); ?>">
+<?php $__env->stopPush(); ?>
 
 <?php $__env->startSection('content'); ?>
-    <div class="container-fluid py-4">
+    <?php
+        $img = $student->profile_image
+            ? asset('uploads/students/' . $student->profile_image)
+            : 'https://ui-avatars.com/api/?name=' .
+                urlencode($student->student_name) .
+                '&background=6366f1&color=fff&size=200';
+    ?>
+    <div class="container-fluid py-4 student-view-modern student-module-compact">
 
         <!-- TOP BAR -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <a href="<?php echo e(route('students.index')); ?>" class="text-muted text-decoration-none">
-                ← Back to Student Directory
+        <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+            <a href="<?php echo e(route('students.index')); ?>" class="text-decoration-none top-link">
+                <i class="fas fa-arrow-left me-1"></i> Back to Student Directory
             </a>
-            <a href="<?php echo e(route('students.edit', $student->id)); ?>" class="btn btn-primary rounded-pill px-4">
+            <a href="<?php echo e(route('students.edit', $student->id)); ?>" class="btn btn-primary-fancy">
                 <i class="fa fa-pen me-1"></i> Edit Profile
             </a>
         </div>
 
-        <div class="row g-4">
-
-            <!-- LEFT PROFILE CARD -->
-            <div class="col-lg-4 col-xl-3">
-                <div class="profile-card">
-
-                    <?php
-                        $img = $student->profile_image
-                            ? asset('uploads/students/' . $student->profile_image)
-                            : 'https://ui-avatars.com/api/?name=' .
-                                urlencode($student->student_name) .
-                                '&background=6366f1&color=fff&size=200';
-                    ?>
-
-                    <img src="<?php echo e($img); ?>" class="profile-img">
-
-                    <h4 class="fw-bold mt-3"><?php echo e($student->student_name); ?></h4>
-                    <div class="text-muted small mb-2">
-                        System Identity: <?php echo e($student->username); ?>
-
-                    </div>
-
-                    <div class="d-flex justify-content-center gap-2 mb-4">
-                        <span class="badge role">Student</span>
-                        <span class="badge <?php echo e($student->status ? 'active' : 'inactive'); ?>">
-                            <?php echo e($student->status ? 'Active' : 'Inactive'); ?>
-
-                        </span>
-                    </div>
-
-                    <hr>
-
-                    <h6 class="section-title">Contact Channels</h6>
-
-                    <div class="contact-item">
-                        <i class="fa fa-envelope"></i>
-                        <div>
-                            <small>Email</small>
-                            <div><?php echo e($student->email); ?></div>
-                        </div>
-                    </div>
-
-                    <div class="contact-item">
-                        <i class="fa fa-phone"></i>
-                        <div>
-                            <small>Mobile No</small>
-                            <div><?php echo e($student->mobile_no ?? 'N/A'); ?></div>
-                        </div>
-                    </div>
-
+        <div class="hero mb-4">
+            <div class="d-flex align-items-center gap-3 flex-wrap">
+                <img src="<?php echo e($img); ?>" class="profile-img" alt="Student">
+                <div>
+                    <h4 class="fw-bold mb-1"><?php echo e($student->student_name); ?></h4>
+                    <div class="small mb-2"><?php echo e($student->email); ?></div>
+                    <span class="badge bg-light text-dark me-1">Student</span>
+                    <span class="badge <?php echo e($student->status ? 'bg-success' : 'bg-danger'); ?>">
+                        <?php echo e($student->status ? 'Active' : 'Inactive'); ?>
+                    </span>
                 </div>
             </div>
+        </div>
+
+        <div class="row g-4">
 
             <!-- RIGHT DETAILS -->
-            <div class="col-lg-8 col-xl-9">
+            <div class="col-12">
 
                 <!-- ACADEMIC -->
-                <div class="detail-card">
+                <div class="panel mb-3">
                     <h5><i class="fa fa-graduation-cap"></i> Academic Information</h5>
 
                     <div class="detail-grid">
@@ -90,11 +63,19 @@
                             <small>Academic Year</small>
                             <strong><?php echo e($student->academicYear->name ?? 'N/A'); ?></strong>
                         </div>
+                        <div>
+                            <small>Student Email</small>
+                            <strong><?php echo e($student->email ?? 'N/A'); ?></strong>
+                        </div>
+                        <div>
+                            <small>Student Mobile</small>
+                            <strong><?php echo e($student->mobile_no ?? 'N/A'); ?></strong>
+                        </div>
                     </div>
                 </div>
 
                 <!-- PERSONAL -->
-                <div class="detail-card">
+                <div class="panel mb-3">
                     <h5><i class="fa fa-user"></i> Personal Records</h5>
 
                     <div class="detail-grid">
@@ -126,7 +107,7 @@
                 </div>
 
                 <!-- PARENT -->
-                <div class="detail-card">
+                <div class="panel">
                     <h5><i class="fa fa-users"></i> Parent / Guardian</h5>
 
                     <div class="detail-grid">
@@ -138,6 +119,26 @@
                             <small>Contact</small>
                             <strong><?php echo e($student->parent->mobile_no ?? 'N/A'); ?></strong>
                         </div>
+                        <div>
+                            <small>Username</small>
+                            <strong><?php echo e($student->parent->username ?? 'N/A'); ?></strong>
+                        </div>
+                        <div>
+                            <small>Email</small>
+                            <strong><?php echo e($student->parent->email ?? 'N/A'); ?></strong>
+                        </div>
+                        <div>
+                            <small>Status</small>
+                            <strong>
+                                <?php echo e(isset($student->parent)
+                                    ? ((int) $student->parent->status === 1 ? 'Active' : 'Inactive')
+                                    : 'Not Linked'); ?>
+                            </strong>
+                        </div>
+                        <div class="full">
+                            <small>Address</small>
+                            <strong><?php echo e($student->parent->address ?? 'N/A'); ?></strong>
+                        </div>
                     </div>
                 </div>
 
@@ -145,5 +146,9 @@
         </div>
     </div>
 <?php $__env->stopSection(); ?>
+
+<?php $__env->startPush('css'); ?>
+<link rel="stylesheet" href="<?php echo e(asset('css/resize/student-compact.css')); ?>">
+<?php $__env->stopPush(); ?>
 
 <?php echo $__env->make('layouts.admin', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\Users\pc\OneDrive\Desktop\school_lms\resources\views/admin/students/show.blade.php ENDPATH**/ ?>

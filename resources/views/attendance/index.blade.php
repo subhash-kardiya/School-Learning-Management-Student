@@ -2,134 +2,243 @@
 
 @section('title', 'Attendance Report')
 
+@push('css')
+    <link rel="stylesheet" href="{{ asset('css/resize/attendance-compact.css') }}">
+@endpush
+
 @section('content')
-    <div class="container-fluid py-4 attendance-modern">
-        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <div class="container-fluid py-4 attendance-monthly-wrap att-view--report"
+        data-grid-url="{{ route('attendance.report.grid') }}">
+        <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-3">
             <div>
                 <h4 class="mb-1">Attendance Report</h4>
-                <p class="text-muted small mb-0">Class-wise daily report</p>
+                <div class="att-filter-note">Monthly report (read-only)</div>
             </div>
-            <div class="date-chip">Date: {{ $date }}</div>
-        </div>
 
-        @if (session('success'))
-            <div class="alert alert-success border-0 shadow-sm mb-3">{{ session('success') }}</div>
+        </div>
+        @if ($errors->any())
+            <div class="alert alert-danger">
+                Please fix the highlighted fields and try again.
+            </div>
         @endif
-
-        <div class="card glass-card mb-4">
-            <div class="card-body p-4">
-                <form method="GET" action="{{ route('attendance.index') }}" class="row g-3">
-                    <div class="col-md-4">
-                        <label class="form-label">Class</label>
-                        <select name="class_id" class="form-select">
-                            <option value="">All</option>
-                            @foreach ($classes as $class)
-                                <option value="{{ $class->id }}" {{ $classId == $class->id ? 'selected' : '' }}>
-                                    {{ $class->name }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label">Section</label>
-                        <select name="section_id" class="form-select">
-                            <option value="">All</option>
-                            @foreach ($sections as $section)
-                                <option value="{{ $section->id }}" {{ $sectionId == $section->id ? 'selected' : '' }}>
-                                    {{ $section->name }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label">Date</label>
-                        <input type="date" name="date" class="form-control" value="{{ $date }}">
-                    </div>
-                    <div class="col-12 text-end">
-                        <button class="btn btn-modern px-4">Filter</button>
-                    </div>
-                </form>
-            </div>
+        <div id="attm-filter-error" class="alert alert-danger d-none"></div>
+        <div id="attm-summary">
+            @include('attendance.partials.monthly-summary', [
+                'daysInMonth' => count($monthlyData['days']),
+                'counts' => $monthlyData['counts'],
+                'percent' => $percent,
+            ])
         </div>
 
-        <div class="card glass-card">
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-modern align-middle mb-0">
-                        <thead>
-                            <tr>
-                                <th>Student</th>
-                                <th>Class / Section</th>
-                                <th>Status</th>
-                                <th class="text-end">Edit</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse ($records as $row)
-                                <tr>
-                                    <td>{{ $row->student?->student_name ?? 'N/A' }}</td>
-                                    <td>
-                                        {{ $row->student?->class?->name ?? 'N/A' }} /
-                                        {{ $row->student?->section?->name ?? 'N/A' }}
-                                    </td>
-                                    <td>
-                                        <span class="badge {{ $row->status == 'present' ? 'bg-success' : 'bg-danger' }}">
-                                            {{ ucfirst($row->status) }}
-                                        </span>
-                                    </td>
-                                    <td class="text-end">
-                                        <form action="{{ route('attendance.update') }}" method="POST" class="d-inline">
-                                            @csrf
-                                            <input type="hidden" name="attendance_id" value="{{ $row->id }}">
-                                            <select name="status" class="form-select form-select-sm d-inline w-auto">
-                                                <option value="present" {{ $row->status == 'present' ? 'selected' : '' }}>Present</option>
-                                                <option value="absent" {{ $row->status == 'absent' ? 'selected' : '' }}>Absent</option>
-                                            </select>
-                                            <button class="btn btn-sm btn-modern">Save</button>
-                                        </form>
-                                    </td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="4" class="text-center text-muted py-4">No records found.</td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
+        <div class="row g-3 mb-3 align-items-end bg-white p-3 rounded shadow-sm mt-3">
+
+            <!-- Class -->
+            <div class="col-md-3">
+                <label class="form-label mb-1">Class</label>
+                <select class="form-select" id="attm-class">
+                    <option value="">Select Class</option>
+                    @foreach ($classes as $class)
+                        <option value="{{ $class->id }}"
+                            {{ (string) $selectedClass === (string) $class->id ? 'selected' : '' }}>
+                            {{ $class->name }}
+                        </option>
+                    @endforeach
+                </select>
             </div>
+
+            <!-- Section -->
+            <div class="col-md-3">
+                <label class="form-label mb-1">Section</label>
+                <select class="form-select" id="attm-section">
+                    <option value="">Select Section</option>
+                    @foreach ($sections as $section)
+                        <option value="{{ $section->id }}" data-class-id="{{ $section->class_id }}"
+                            {{ (string) $selectedSection === (string) $section->id ? 'selected' : '' }}>
+                            {{ $section->name }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+
+            <!-- Month -->
+            <div class="col-md-3">
+                <label class="form-label mb-1">Month</label>
+                <select class="form-select" id="attm-month">
+                    @foreach (range(1, 12) as $m)
+                        <option value="{{ $m }}" {{ $month === $m ? 'selected' : '' }}>
+                            {{ \Illuminate\Support\Carbon::createFromDate(null, $m, 1)->format('F') }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+
+            <!-- Search Button -->
+            <div class="col-md-3">
+                <button type="button" class="btn btn-primary w-100" id="attm-search">
+                    Search
+                </button>
+            </div>
+
+            <input type="hidden" id="attm-year" value="{{ $year }}">
+
+        </div>
+
+        <div class="d-flex justify-content-end gap-2 mb-3">
+            <button type="button" class="attm-search-btn" id="attm-export-pdf">Export PDF</button>
+        </div>
+
+        <div id="attm-grid">
+            @include('attendance.partials.monthly-grid', [
+                'students' => $students,
+                'days' => $monthlyData['days'],
+                'attendanceMap' => $monthlyData['attendanceMap'],
+                'editableDate' => \Illuminate\Support\Carbon::today()->toDateString(),
+                'canEdit' => false,
+            ])
         </div>
     </div>
-
-    <style>
-        .attendance-modern {
-            background: linear-gradient(180deg, #f6f8ff 0%, #f9fbff 100%);
-            border-radius: 16px;
-        }
-        .glass-card {
-            background: rgba(255, 255, 255, 0.9);
-            border: 1px solid #eef1ff;
-            box-shadow: 0 10px 30px rgba(17, 24, 39, 0.06);
-            border-radius: 14px;
-        }
-        .btn-modern {
-            background: linear-gradient(135deg, #4f46e5, #06b6d4);
-            color: #fff;
-            border: none;
-            border-radius: 10px;
-            padding: 8px 14px;
-        }
-        .btn-modern:hover { filter: brightness(0.95); color: #fff; }
-        .date-chip {
-            background: #eef2ff;
-            color: #374151;
-            padding: 6px 10px;
-            border-radius: 999px;
-            font-size: 12px;
-        }
-        .table-modern thead th {
-            background: #f3f4ff;
-            border-bottom: 0;
-        }
-    </style>
 @endsection
+
+@push('scripts')
+    <script>
+        (function() {
+            const wrapper = document.querySelector('.attendance-monthly-wrap');
+            if (!wrapper) return;
+
+            const gridUrl = wrapper.getAttribute('data-grid-url');
+            const gridEl = document.getElementById('attm-grid');
+            const summaryEl = document.getElementById('attm-summary');
+            const classSelect = document.getElementById('attm-class');
+            const sectionSelect = document.getElementById('attm-section');
+            const monthSelect = document.getElementById('attm-month');
+            const yearSelect = document.getElementById('attm-year');
+            const searchBtn = document.getElementById('attm-search');
+            const exportPdfBtn = document.getElementById('attm-export-pdf');
+            const filterError = document.getElementById('attm-filter-error');
+
+            const setLoading = () => {
+                if (!gridEl) return;
+                gridEl.innerHTML = `
+                    <div class="attm-grid-wrap">
+                        <div class="p-3">
+                            <div class="attm-skeleton mb-2"></div>
+                            <div class="attm-skeleton mb-2"></div>
+                            <div class="attm-skeleton mb-2"></div>
+                            <div class="attm-skeleton"></div>
+                        </div>
+                    </div>
+                `;
+            };
+
+            const loadGrid = () => {
+                if (!gridUrl) return;
+                if (!classSelect?.value || !sectionSelect?.value) {
+                    if (filterError) {
+                        filterError.textContent = 'Please select both Class and Section.';
+                        filterError.classList.remove('d-none');
+                    }
+                    classSelect?.classList.toggle('is-invalid', !classSelect?.value);
+                    sectionSelect?.classList.toggle('is-invalid', !sectionSelect?.value);
+                    return;
+                }
+                if (filterError) filterError.classList.add('d-none');
+                classSelect?.classList.remove('is-invalid');
+                sectionSelect?.classList.remove('is-invalid');
+                setLoading();
+                const params = new URLSearchParams({
+                    class_id: classSelect?.value || '',
+                    section_id: sectionSelect?.value || '',
+                    month: monthSelect?.value || '',
+                    year: yearSelect?.value || '',
+                });
+                fetch(`${gridUrl}?${params.toString()}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (summaryEl && data.summary) summaryEl.innerHTML = data.summary;
+                        if (gridEl && data.html) gridEl.innerHTML = data.html;
+                    })
+                    .catch(() => {
+                        if (gridEl) gridEl.innerHTML =
+                            '<div class="attm-empty">Unable to load attendance.</div>';
+                    });
+            };
+
+            const filterSections = (autoPick = true) => {
+                if (!sectionSelect || !classSelect) return;
+                const classId = classSelect.value;
+                Array.from(sectionSelect.options).forEach(option => {
+                    if (!option.value) {
+                        option.hidden = false;
+                        return;
+                    }
+                    const optionClass = option.getAttribute('data-class-id');
+                    option.hidden = classId && optionClass !== classId;
+                });
+                const selectedHidden = classId && sectionSelect.selectedOptions.length && sectionSelect
+                    .selectedOptions[0].hidden;
+                if (selectedHidden) {
+                    sectionSelect.value = '';
+                }
+                if (autoPick && classId && !sectionSelect.value) {
+                    const firstVisible = Array.from(sectionSelect.options).find(opt => opt.value && !opt.hidden);
+                    if (firstVisible) {
+                        sectionSelect.value = firstVisible.value;
+                    }
+                }
+            };
+
+            const exportPdf = () => {
+                const table = gridEl?.querySelector('table');
+                if (!table) return;
+                const exportTable = table.cloneNode(true);
+                exportTable.querySelectorAll('img').forEach(img => img.remove());
+                const win = window.open('', '_blank');
+                if (!win) return;
+                const title = 'Attendance Report';
+                const classLabel = classSelect?.selectedOptions?.[0]?.textContent?.trim() || 'N/A';
+                const sectionLabel = sectionSelect?.selectedOptions?.[0]?.textContent?.trim() || 'N/A';
+                const monthLabel = monthSelect?.selectedOptions?.[0]?.textContent?.trim() || '';
+                const yearLabel = yearSelect?.value || '{{ $year }}';
+                win.document.write(`
+                    <html>
+                        <head>
+                            <title>${title}</title>
+                            <style>
+                                body { font-family: Arial, sans-serif; padding: 16px; }
+                                h3 { margin: 0 0 8px; }
+                                .meta { margin: 0 0 12px; color: #374151; font-size: 13px; }
+                                table { width: 100%; border-collapse: collapse; font-size: 11px; }
+                                th, td { border: 1px solid #e5e7eb; padding: 4px 6px; text-align: center; }
+                                th:first-child, td:first-child { text-align: left; min-width: 180px; }
+                                thead th { background: #f3f4f6; }
+                            </style>
+                        </head>
+                        <body>
+                            <h3>${title}</h3>
+                            <div class="meta"><strong>Class:</strong> ${classLabel} &nbsp; <strong>Section:</strong> ${sectionLabel} &nbsp; <strong>Month:</strong> ${monthLabel} ${yearLabel}</div>
+                            ${exportTable.outerHTML}
+                        </body>
+                    </html>
+                `);
+                win.document.close();
+                win.focus();
+                win.print();
+                win.close();
+            };
+
+            classSelect?.addEventListener('change', () => {
+                filterSections(true);
+                loadGrid();
+            });
+            sectionSelect?.addEventListener('change', loadGrid);
+            monthSelect?.addEventListener('change', loadGrid);
+            yearSelect?.addEventListener?.('change', loadGrid);
+            searchBtn?.addEventListener('click', loadGrid);
+            exportPdfBtn?.addEventListener('click', exportPdf);
+            filterSections(true);
+            if (classSelect?.value && sectionSelect?.value) {
+                loadGrid();
+            }
+        })();
+    </script>
+@endpush

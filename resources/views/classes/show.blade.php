@@ -3,7 +3,7 @@
 @section('title', 'Class Details')
 
 @section('content')
-    <div class="container-fluid py-4">
+    <div class="container-fluid py-4 class-module-compact">
         <!-- Header Section -->
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
@@ -85,4 +85,8 @@
             </div>
         </div>
     </div>
+@push('css')
+    <link rel="stylesheet" href="{{ asset('css/resize/class-compact.css') }}">
+@endpush
+
 @endsection

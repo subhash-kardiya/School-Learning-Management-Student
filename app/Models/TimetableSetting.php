@@ -3,9 +3,12 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class TimetableSetting extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
         'academic_year_id',
         'class_id',

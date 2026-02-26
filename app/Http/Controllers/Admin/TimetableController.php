@@ -14,9 +14,39 @@ use App\Models\TimetableSetting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 
 class TimetableController extends Controller
 {
+    private function normalizeTimeValue(?string $time): string
+    {
+        $time = trim((string) $time);
+        if ($time === '') {
+            return '';
+        }
+
+        return date('H:i', strtotime($time));
+    }
+
+    private function activeAcademicYearId(): ?int
+    {
+        return optional(
+            AcademicYear::query()
+                ->where('is_active', 1)
+                ->where('is_locked', 0)
+                ->first()
+        )->id;
+    }
+
+    private function enforceActiveAcademicYearOrFail(): int
+    {
+        $yearId = (int) ($this->activeAcademicYearId() ?? 0);
+        if ($yearId <= 0) {
+            abort(422, 'No active academic year found.');
+        }
+        return $yearId;
+    }
+
     private function canPermission(string $permission): bool
     {
         $user = Auth::user();
@@ -102,6 +132,8 @@ class TimetableController extends Controller
             abort(403, 'Unauthorized access');
         }
 
+        $yearId = $this->enforceActiveAcademicYearOrFail();
+
         $query = Timetable::with(['class', 'section', 'subject', 'teacher', 'academicYear'])
             ->latest();
 
@@ -112,11 +144,26 @@ class TimetableController extends Controller
             $query->where('section_id', $request->section_id);
         }
 
-        $classes = Classes::with('sections')->get();
-        $sections = Section::all();
-        $subjects = Subject::orderBy('name')->get();
-        $teachers = Teacher::orderBy('name')->get();
-        $subjectMappings = TeacherMapping::with(['subject', 'teacher', 'section'])
+        if ($yearId) {
+            $query->where('academic_year_id', $yearId);
+        }
+
+        $classes = Classes::with('sections')
+            ->when($yearId, fn($q) => $q->where('academic_year_id', $yearId))
+            ->get();
+        $sections = Section::whereHas('class', function($q) use ($yearId) {
+            $q->when($yearId, fn($sq) => $sq->where('academic_year_id', $yearId));
+        })->get();
+        $subjects = Subject::query()
+            ->when($yearId, function ($q) use ($yearId) {
+                $q->whereHas('class', fn($cq) => $cq->where('academic_year_id', $yearId));
+            })
+            ->orderBy('name')
+            ->get();
+        $subjectMappings = TeacherMapping::with(['subject', 'teacher', 'section', 'room'])
+            ->when($yearId, function ($q) use ($yearId) {
+                $q->whereHas('section.class', fn($cq) => $cq->where('academic_year_id', $yearId));
+            })
             ->get()
             ->map(function ($map) {
                 return [
@@ -126,9 +173,14 @@ class TimetableController extends Controller
                     'teacher_id' => $map->teacher_id,
                     'teacher_name' => $map->teacher?->name,
                     'class_id' => $map->section?->class_id,
+                    'room' => $map->room?->name,
                 ];
             });
-        $academicYears = AcademicYear::where('is_active', 1)->orderBy('name')->get();
+        $teacherIds = $subjectMappings->pluck('teacher_id')->filter()->unique()->values();
+        $teachers = $teacherIds->isEmpty()
+            ? collect()
+            : Teacher::whereIn('id', $teacherIds)->orderBy('name')->get();
+        $academicYears = AcademicYear::where('id', $yearId)->get();
 
         return view('timetable.class', compact(
             'classes',
@@ -146,20 +198,32 @@ class TimetableController extends Controller
             abort(403, 'Unauthorized access');
         }
 
+        $yearId = $this->enforceActiveAcademicYearOrFail();
+
         $payload = $request->validate([
             'class_id' => 'required|exists:classes,id',
             'section_id' => 'required|exists:sections,id',
             'subject_id' => 'required|exists:subjects,id',
             'teacher_id' => 'nullable|exists:teachers,id',
-            'academic_year_id' => 'nullable|exists:academic_years,id',
-            'day_of_week' => 'required|string',
-            'start_time' => 'required',
-            'end_time' => 'required',
+            'academic_year_id' => [
+                'nullable',
+                Rule::exists('academic_years', 'id')->where(fn ($q) => $q->where('is_active', 1)->where('is_locked', 0)),
+            ],
+            'day_of_week' => 'required|in:Monday,Tuesday,Wednesday,Thursday,Friday,Saturday',
+            'start_time' => 'required|date_format:H:i',
+            'end_time' => 'required|date_format:H:i|after:start_time',
             'room' => 'nullable|string|max:50',
-            'status' => 'required',
+            'status' => 'required|in:0,1',
         ]);
+        $payload['academic_year_id'] = $yearId;
 
         $payload['status'] = filter_var($payload['status'], FILTER_VALIDATE_BOOLEAN) ? 1 : 0;
+        if (!Classes::whereKey($payload['class_id'])->where('academic_year_id', $yearId)->exists()) {
+            return back()->withErrors(['class_id' => 'Selected class does not belong to active academic year.'])->withInput();
+        }
+        if (!Section::whereKey($payload['section_id'])->where('class_id', $payload['class_id'])->exists()) {
+            return back()->withErrors(['section_id' => 'Selected section is not mapped to selected class.'])->withInput();
+        }
 
         $setting = $this->getSetting(
             (int) ($payload['academic_year_id'] ?? 0),
@@ -178,13 +242,18 @@ class TimetableController extends Controller
         if (!$subject || (int) $subject->class_id !== (int) $payload['class_id']) {
             return back()->withErrors(['subject_id' => 'Subject must be mapped to the selected class.'])->withInput();
         }
-        $mapping = TeacherMapping::where('section_id', $payload['section_id'])
+        $mapping = TeacherMapping::with('room')
+            ->where('section_id', $payload['section_id'])
             ->where('subject_id', $payload['subject_id'])
             ->first();
         if (!$mapping) {
             return back()->withErrors(['subject_id' => 'No teacher mapping found for this subject/section.'])->withInput();
         }
         $payload['teacher_id'] = $mapping->teacher_id;
+        if (empty($mapping->room?->name)) {
+            return back()->withErrors(['room' => 'Room is not assigned in class mapping for this section.'])->withInput();
+        }
+        $payload['room'] = $mapping->room->name;
 
         $slots = collect($setting->slots ?? [])->values();
         $slotIndex = $slots->search(function ($slot) use ($payload) {
@@ -222,11 +291,26 @@ class TimetableController extends Controller
         }
 
         $timetable = Timetable::findOrFail($id);
-        $classes = Classes::with('sections')->get();
-        $sections = Section::all();
-        $subjects = Subject::orderBy('name')->get();
-        $teachers = Teacher::orderBy('name')->get();
-        $subjectMappings = TeacherMapping::with(['subject', 'teacher', 'section'])
+        $yearId = $this->enforceActiveAcademicYearOrFail();
+
+        $classes = Classes::with('sections')
+            ->when($yearId, fn($q) => $q->where('academic_year_id', $yearId))
+            ->get();
+        $sections = Section::query()
+            ->when($yearId, function ($q) use ($yearId) {
+                $q->whereHas('class', fn($cq) => $cq->where('academic_year_id', $yearId));
+            })
+            ->get();
+        $subjects = Subject::query()
+            ->when($yearId, function ($q) use ($yearId) {
+                $q->whereHas('class', fn($cq) => $cq->where('academic_year_id', $yearId));
+            })
+            ->orderBy('name')
+            ->get();
+        $subjectMappings = TeacherMapping::with(['subject', 'teacher', 'section', 'room'])
+            ->when($yearId, function ($q) use ($yearId) {
+                $q->whereHas('section.class', fn($cq) => $cq->where('academic_year_id', $yearId));
+            })
             ->get()
             ->map(function ($map) {
                 return [
@@ -236,9 +320,14 @@ class TimetableController extends Controller
                     'teacher_id' => $map->teacher_id,
                     'teacher_name' => $map->teacher?->name,
                     'class_id' => $map->section?->class_id,
+                    'room' => $map->room?->name,
                 ];
             });
-        $academicYears = AcademicYear::where('is_active', 1)->orderBy('name')->get();
+        $teacherIds = $subjectMappings->pluck('teacher_id')->filter()->unique()->values();
+        $teachers = $teacherIds->isEmpty()
+            ? collect()
+            : Teacher::whereIn('id', $teacherIds)->orderBy('name')->get();
+        $academicYears = AcademicYear::where('id', $yearId)->get();
 
         return view('timetable.edit', compact(
             'timetable',
@@ -257,22 +346,34 @@ class TimetableController extends Controller
             abort(403, 'Unauthorized access');
         }
 
+        $yearId = $this->enforceActiveAcademicYearOrFail();
+
         $payload = $request->validate([
             'class_id' => 'required|exists:classes,id',
             'section_id' => 'required|exists:sections,id',
             'subject_id' => 'required|exists:subjects,id',
             'teacher_id' => 'nullable|exists:teachers,id',
-            'academic_year_id' => 'nullable|exists:academic_years,id',
-            'day_of_week' => 'required|string',
-            'start_time' => 'required',
-            'end_time' => 'required',
+            'academic_year_id' => [
+                'nullable',
+                Rule::exists('academic_years', 'id')->where(fn ($q) => $q->where('is_active', 1)->where('is_locked', 0)),
+            ],
+            'day_of_week' => 'required|in:Monday,Tuesday,Wednesday,Thursday,Friday,Saturday',
+            'start_time' => 'required|date_format:H:i',
+            'end_time' => 'required|date_format:H:i|after:start_time',
             'room' => 'nullable|string|max:50',
-            'status' => 'required',
+            'status' => 'required|in:0,1',
         ]);
+        $payload['academic_year_id'] = $yearId;
 
         $payload['status'] = filter_var($payload['status'], FILTER_VALIDATE_BOOLEAN) ? 1 : 0;
         $payload['start_time'] = date('H:i', strtotime($payload['start_time']));
         $payload['end_time'] = date('H:i', strtotime($payload['end_time']));
+        if (!Classes::whereKey($payload['class_id'])->where('academic_year_id', $yearId)->exists()) {
+            return back()->withErrors(['class_id' => 'Selected class does not belong to active academic year.'])->withInput();
+        }
+        if (!Section::whereKey($payload['section_id'])->where('class_id', $payload['class_id'])->exists()) {
+            return back()->withErrors(['section_id' => 'Selected section is not mapped to selected class.'])->withInput();
+        }
 
         $setting = $this->getSetting(
             (int) ($payload['academic_year_id'] ?? 0),
@@ -291,13 +392,18 @@ class TimetableController extends Controller
         if (!$subject || (int) $subject->class_id !== (int) $payload['class_id']) {
             return back()->withErrors(['subject_id' => 'Subject must be mapped to the selected class.'])->withInput();
         }
-        $mapping = TeacherMapping::where('section_id', $payload['section_id'])
+        $mapping = TeacherMapping::with('room')
+            ->where('section_id', $payload['section_id'])
             ->where('subject_id', $payload['subject_id'])
             ->first();
         if (!$mapping) {
             return back()->withErrors(['subject_id' => 'No teacher mapping found for this subject/section.'])->withInput();
         }
         $payload['teacher_id'] = $mapping->teacher_id;
+        if (empty($mapping->room?->name)) {
+            return back()->withErrors(['room' => 'Room is not assigned in class mapping for this section.'])->withInput();
+        }
+        $payload['room'] = $mapping->room->name;
 
         $conflictMessage = $this->hasTimeConflict($payload, (int) $id);
         if ($conflictMessage) {
@@ -328,6 +434,10 @@ class TimetableController extends Controller
 
     public function teacherIndex()
     {
+        if (session('role') === 'teacher' && request()->is('admin/timetable/teacher')) {
+            return redirect()->route('teacher.timetable', request()->query());
+        }
+
         if (!$this->canPermission('timetable.view_own')) {
             abort(403, 'Unauthorized access');
         }
@@ -338,7 +448,11 @@ class TimetableController extends Controller
         }
         $isAdminView = $this->canPermission('timetable.manage_all');
 
+        $yearId = request()->input('academic_year_id') ?: session('selected_academic_year_id');
         $timetables = Timetable::with(['class', 'section', 'subject'])
+            ->when($yearId, function($q) use ($yearId) {
+                $q->where('academic_year_id', $yearId);
+            })
             ->latest();
         if (!$isAdminView) {
             $timetables->where('teacher_id', $teacherId);
@@ -350,9 +464,14 @@ class TimetableController extends Controller
         $classes = $classIds->isEmpty() ? collect() : Classes::whereIn('id', $classIds)->get();
         $sections = $sectionIds->isEmpty() ? collect() : Section::whereIn('id', $sectionIds)->get();
 
-        $teachers = $isAdminView
-            ? Teacher::orderBy('name')->get()
-            : Teacher::where('id', $teacherId)->get();
+        if ($isAdminView) {
+            $teacherIds = $timetables->pluck('teacher_id')->filter()->unique()->values();
+            $teachers = $teacherIds->isEmpty()
+                ? collect()
+                : Teacher::whereIn('id', $teacherIds)->orderBy('name')->get();
+        } else {
+            $teachers = Teacher::where('id', $teacherId)->get();
+        }
         $defaultTeacherId = $isAdminView ? null : $teacherId;
 
         return view('timetable.teacher', compact('timetables', 'classes', 'sections', 'teachers', 'defaultTeacherId'));
@@ -405,7 +524,9 @@ class TimetableController extends Controller
         $query = Timetable::with(['class', 'section', 'subject', 'teacher', 'academicYear'])
             ->latest();
 
-        if (!$request->filled('class_id') || !$request->filled('section_id') || !$request->filled('academic_year_id')) {
+        $yearId = $this->enforceActiveAcademicYearOrFail();
+
+        if (!$request->filled('class_id') || !$request->filled('section_id') || !$yearId) {
             return response()->json(['entries' => [], 'settings' => null]);
         }
 
@@ -418,9 +539,8 @@ class TimetableController extends Controller
         if ($request->filled('teacher_id')) {
             $query->where('teacher_id', $request->teacher_id);
         }
-        if ($request->filled('academic_year_id')) {
-            $query->where('academic_year_id', $request->academic_year_id);
-        }
+        
+        $query->where('academic_year_id', $yearId);
 
         $canEdit = $this->canPermission('timetable.manage_all');
         $canDelete = $this->canPermission('timetable.manage_all');
@@ -434,7 +554,7 @@ class TimetableController extends Controller
             return $row;
         });
 
-        $setting = $this->getSetting((int) $request->academic_year_id, (int) $request->class_id, (int) $request->section_id);
+        $setting = $this->getSetting((int) $yearId, (int) $request->class_id, (int) $request->section_id);
         return response()->json([
             'entries' => $rows,
             'settings' => $setting,
@@ -447,8 +567,13 @@ class TimetableController extends Controller
             abort(403, 'Unauthorized access');
         }
 
+        $yearId = $this->enforceActiveAcademicYearOrFail();
+
         $data = $request->validateWithBag('settings', [
-            'academic_year_id' => 'required|exists:academic_years,id',
+            'academic_year_id' => [
+                'required',
+                Rule::exists('academic_years', 'id')->where(fn ($q) => $q->where('is_active', 1)->where('is_locked', 0)),
+            ],
             'class_id' => 'required|exists:classes,id',
             'section_id' => 'required|exists:sections,id',
             'days' => 'required|array|min:1',
@@ -459,22 +584,39 @@ class TimetableController extends Controller
             'slots.*.type' => 'required|in:period,break,lunch',
             'status' => 'required|in:draft,published',
         ]);
+        $data['academic_year_id'] = $yearId;
+        if (!Classes::whereKey($data['class_id'])->where('academic_year_id', $yearId)->exists()) {
+            return back()->withErrors(['class_id' => 'Selected class does not belong to active academic year.'])->withInput();
+        }
+        if (!Section::whereKey($data['section_id'])->where('class_id', $data['class_id'])->exists()) {
+            return back()->withErrors(['section_id' => 'Selected section is not mapped to selected class.'])->withInput();
+        }
 
         $setting = $this->getSetting((int) $data['academic_year_id'], (int) $data['class_id'], (int) $data['section_id']);
         if ($setting && $setting->status === 'published') {
             abort(403, 'Timetable is published and locked.');
         }
 
-        $slotKeys = collect($data['slots'])->map(function ($slot) {
-            return ($slot['start'] ?? '') . '-' . ($slot['end'] ?? '');
-        })->filter()->values();
+        $normalizedSlots = collect($data['slots'])->map(function ($slot) {
+            return [
+                'start' => $this->normalizeTimeValue($slot['start'] ?? ''),
+                'end' => $this->normalizeTimeValue($slot['end'] ?? ''),
+                'type' => $slot['type'] ?? 'period',
+            ];
+        })->filter(function ($slot) {
+            return !empty($slot['start']) && !empty($slot['end']);
+        })->values();
+
+        $slotKeys = $normalizedSlots->map(function ($slot) {
+            return $slot['start'] . '-' . $slot['end'];
+        })->values();
 
         $outOfRange = Timetable::where('academic_year_id', $data['academic_year_id'])
             ->where('class_id', $data['class_id'])
             ->where('section_id', $data['section_id'])
             ->get()
             ->filter(function ($row) use ($slotKeys) {
-                $key = $row->start_time . '-' . $row->end_time;
+                $key = $this->normalizeTimeValue($row->start_time) . '-' . $this->normalizeTimeValue($row->end_time);
                 return !$slotKeys->contains($key);
             });
 
@@ -491,7 +633,7 @@ class TimetableController extends Controller
             ],
             [
                 'days' => $data['days'],
-                'slots' => $data['slots'],
+                'slots' => $normalizedSlots->all(),
                 'status' => $data['status'],
             ]
         );
@@ -501,6 +643,10 @@ class TimetableController extends Controller
 
     public function teacherData(Request $request)
     {
+        if (session('role') === 'teacher' && $request->is('admin/timetable/teacher/data')) {
+            return redirect()->route('teacher.timetable.data', $request->query());
+        }
+
         if (!$this->canPermission('timetable.view_own')) {
             abort(403, 'Unauthorized access');
         }
@@ -528,6 +674,11 @@ class TimetableController extends Controller
         }
         if ($request->filled('section_id')) {
             $query->where('section_id', $request->section_id);
+        }
+
+        $yearId = $this->activeAcademicYearId();
+        if ($yearId) {
+            $query->where('academic_year_id', $yearId);
         }
 
         $rows = $query->get()->map(function ($row) {
@@ -567,6 +718,11 @@ class TimetableController extends Controller
         }
         if (!empty($student->section_id)) {
             $query->where('section_id', $student->section_id);
+        }
+
+        $yearId = $this->activeAcademicYearId();
+        if ($yearId) {
+            $query->where('academic_year_id', $yearId);
         }
 
         $rows = $query->get()->map(function ($row) {
@@ -616,6 +772,11 @@ class TimetableController extends Controller
         }
         if (!empty($student->section_id)) {
             $query->where('section_id', $student->section_id);
+        }
+
+        $yearId = $this->activeAcademicYearId();
+        if ($yearId) {
+            $query->where('academic_year_id', $yearId);
         }
 
         $rows = $query->get()->map(function ($row) {

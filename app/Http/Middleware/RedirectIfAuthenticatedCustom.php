@@ -19,6 +19,7 @@ class RedirectIfAuthenticatedCustom
             $role = session('role');
             switch ($role) {
                 case 'admin':
+                case 'superadmin':
                     return redirect()->route('admin.dashboard');
                 case 'teacher':
                     return redirect()->route('teacher.dashboard');

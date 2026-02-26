@@ -199,7 +199,7 @@
             @can('exam_type')
                 <a href="{{ route('exams.type') }}"
                     class="ps-5 submenu {{ request()->routeIs('exams.type*') ? 'current-page' : '' }}">
-                    <i class="fas fa-tasks"></i> Exam Type
+                    <i class="fas fa-tasks"></i> Exam Create
                 </a>
             @endcan
             @can('exam_schedule')

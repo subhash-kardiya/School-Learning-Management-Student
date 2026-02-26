@@ -3,7 +3,7 @@
 @section('title', 'Teacher Timetable')
 
 @section('content')
-    <div class="container-fluid py-4">
+    <div class="container-fluid py-4 timetable-module-compact">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
                 <h5 class="mb-1">Teacher Timetable</h5>
@@ -13,8 +13,11 @@
 
         <div class="card">
             <div class="card-body">
+                @php
+                    $teacherDataRoute = session('role') === 'teacher' ? 'teacher.timetable.data' : 'timetable.teacher.data';
+                @endphp
                 @include('timetable.partials.grid', [
-                    'dataUrl' => route('timetable.teacher.data'),
+                    'dataUrl' => route($teacherDataRoute),
                     'filters' => [
                         'classes' => $classes ?? [],
                         'sections' => $sections ?? [],
@@ -22,8 +25,8 @@
                     ],
                     'config' => [
                         'title' => 'My Timetable',
-                        'showClass' => false,
-                        'showSection' => false,
+                        'showClass' => true,
+                        'showSection' => true,
                         'showTeacher' => true,
                         'showWeek' => true,
                         'showTodayWeek' => true,

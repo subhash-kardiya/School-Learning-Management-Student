@@ -12,6 +12,7 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->web(append: [
+            \App\Http\Middleware\ApplyContextFilters::class,
             \App\Http\Middleware\ShareAuthenticatedUser::class,
         ]);
         $middleware->alias([

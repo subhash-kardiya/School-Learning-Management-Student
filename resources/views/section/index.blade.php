@@ -1,71 +1,40 @@
-<?php $__env->startSection('title', 'Sections Management'); ?>
+@extends('layouts.admin')
 
-<?php $__env->startSection('content'); ?>
-    <div class="container-fluid py-4">
-        <!-- Header Section -->
+@section('title', 'Sections Management')
+
+@section('content')
+    <div class="container-fluid py-4 section-module-compact">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
                 <p class="text-muted small mb-0">Manage class sections and seating capacity allocations</p>
             </div>
-            <button type="button" class="btn btn-primary-fancy" data-bs-toggle="collapse" data-bs-target="#sectionForm">
+            <a href="{{ route('section.create') }}" class="btn btn-primary-fancy">
                 <i class="fa fa-plus me-2"></i> Create New Section
-            </button>
+            </a>
         </div>
 
-        <!-- Collapsible Add Form -->
-        <div class="collapse <?php echo e($errors->any() ? 'show' : ''); ?> mb-4" id="sectionForm">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="card-title">Create New Section</h5>
-                </div>
-                <div class="card-body p-4">
-                    <form action="<?php echo e(route('section.store')); ?>" method="POST">
-                        <?php echo csrf_field(); ?>
-                        <div class="row g-4 mb-4">
-                            <div class="col-md-4">
-                                <label for="name" class="form-label">Section Name</label>
-                                <input type="text" class="form-control" name="name" placeholder="e.g. Section A"
-                                    required>
-                            </div>
-
-                            <div class="col-md-4">
-                                <label for="class_id" class="form-label">Assign Class</label>
-                                <select name="class_id" class="form-select" required>
-                                    <option value="">Select Class</option>
-                                    <?php $__currentLoopData = $classes; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $class): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                                        <option value="<?php echo e($class->id); ?>"><?php echo e($class->name); ?></option>
-                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-                                </select>
-                            </div>
-
-                            <div class="col-md-4">
-                                <label for="capacity" class="form-label">Capacity</label>
-                                <input type="number" class="form-control" name="capacity" min="1"
-                                    placeholder="e.g. 40" required>
-                            </div>
-                            <div class="col-md-4">
-                                <label for="status" class="form-label">Status</label>
-                                <select name="status" class="form-select" required>
-                                    <option value="1">Active</option>
-                                    <option value="0">Inactive</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div class="d-flex justify-content-end">
-                            <button type="submit" class="btn btn-primary-fancy px-5">Save Section Details</button>
-                        </div>
-                    </form>
-                </div>
+        @if (session('success'))
+            <div class="alert alert-success border-0 shadow-sm mb-3">
+                {{ session('success') }}
             </div>
-        </div>
+        @endif
+        @if (session('error'))
+            <div class="alert alert-danger border-0 shadow-sm mb-3">
+                {{ session('error') }}
+            </div>
+        @endif
 
-        <!-- Sections Table -->
         <div class="card">
             <div class="card-header">
-                <h5 class="card-title">Existing Sections</h5>
+                <h5 class="card-title mb-0">Existing Sections</h5>
             </div>
             <div class="card-body p-0">
+                <select id="sectionClassFilter" class="form-select form-select-sm d-none">
+                    <option value="">All Classes</option>
+                    @foreach ($classes as $class)
+                        <option value="{{ $class->id }}">{{ $class->name }}</option>
+                    @endforeach
+                </select>
                 <div class="table-responsive">
                     <table class="table table-hover align-middle mb-0" id="sections-table" style="width:100%">
                         <thead>
@@ -78,23 +47,29 @@
                                 <th class="text-end">Actions</th>
                             </tr>
                         </thead>
-                        <tbody>
-                        </tbody>
+                        <tbody></tbody>
                     </table>
                 </div>
             </div>
         </div>
     </div>
-<?php $__env->stopSection(); ?>
+@endsection
 
-<?php $__env->startPush('scripts'); ?>
+@push('scripts')
     <script type="text/javascript">
         $(function() {
+            const classFilter = $('#sectionClassFilter');
+
             var table = $('#sections-table').DataTable({
                 processing: true,
                 serverSide: true,
                 dom: '<"d-flex justify-content-between align-items-center p-2 border-bottom"l f>rt<"d-flex justify-content-between align-items-center p-4"i p>',
-                ajax: "<?php echo e(route('section.index')); ?>",
+                ajax: {
+                    url: "{{ route('section.index') }}",
+                    data: function(d) {
+                        d.class_id = classFilter.val();
+                    }
+                },
                 columns: [{
                         data: 'DT_RowIndex',
                         name: 'DT_RowIndex',
@@ -143,8 +118,18 @@
             });
 
             $('.dataTables_length select').addClass('form-select-sm');
+            $('#sections-table_filter').addClass('d-flex align-items-center gap-2');
+            $('#sections-table_filter label').addClass('mb-0');
+            classFilter.removeClass('d-none').css('min-width', '170px');
+            $('#sections-table_filter').prepend(classFilter);
+            $('#sections-table_filter').prepend('<span class="text-muted small mb-0 ms-1">Filter Class</span>');
+            classFilter.on('change', function() {
+                table.ajax.reload();
+            });
         });
     </script>
-<?php $__env->stopPush(); ?>
+@endpush
 
-<?php echo $__env->make('layouts.admin', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\Users\pc\OneDrive\Desktop\school_lms\resources\views/admin/section/index.blade.php ENDPATH**/ ?>
+@push('css')
+    <link rel="stylesheet" href="{{ asset('css/resize/section-compact.css') }}">
+@endpush

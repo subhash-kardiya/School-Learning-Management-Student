@@ -16,17 +16,13 @@ return new class extends Migration
 
             $table->foreignId('class_id')
                 ->constrained('classes')
-                ->onDelete('cascade');
+                ->onDelete('cascade'); 
 
             $table->foreignId('section_id')
                 ->nullable()
                 ->constrained('sections')
                 ->onDelete('set null');
 
-            $table->foreignId('teacher_id')
-                ->nullable()
-                ->constrained('teachers')
-                ->onDelete('set null');
 
             $table->boolean('status')->default(1);
             $table->timestamps();

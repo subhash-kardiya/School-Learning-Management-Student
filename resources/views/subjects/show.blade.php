@@ -3,7 +3,7 @@
 @section('title', 'Subject Details')
 
 @section('content')
-    <div class="container-fluid py-4 subject-ui">
+    <div class="container-fluid py-4 subject-ui subject-module-compact">
 
         <!-- HEADER -->
         <div class="d-flex justify-content-between align-items-center mb-4">
@@ -45,15 +45,6 @@
                     </div>
                 </div>
             </div>
-            <div class="col-md-4">
-                <div class="kpi-card gradient-success">
-                    <i class="fas fa-user-tie"></i>
-                    <div>
-                        <small>Teacher</small>
-                        <h6 class="mb-0">{{ $subject->teacher->name ?? 'Not Assigned' }}</h6>
-                    </div>
-                </div>
-            </div>
         </div>
 
         <!-- CONTENT GRID -->
@@ -82,20 +73,8 @@
                     </div>
                 </div>
             </div>
-
-            <!-- RIGHT: TEACHER + META -->
+            <!-- RIGHT: META -->
             <div class="col-lg-5">
-                <div class="glass-card mb-4">
-                    <h6 class="section-title">Assigned Teacher</h6>
-                    <div class="teacher-box">
-                        <div class="avatar"><i class="fas fa-user"></i></div>
-                        <div>
-                            <strong>{{ $subject->teacher->name ?? 'Not Assigned' }}</strong>
-                            <small class="text-muted d-block">Teacher ID: {{ $subject->teacher->id ?? '-' }}</small>
-                        </div>
-                    </div>
-                </div>
-
                 <div class="glass-card">
                     <h6 class="section-title">System Timeline</h6>
                     <div class="timeline">
@@ -122,3 +101,7 @@
         </div>
     </div>
 @endsection
+
+@push('css')
+    <link rel="stylesheet" href="{{ asset('css/resize/subject-compact.css') }}">
+@endpush

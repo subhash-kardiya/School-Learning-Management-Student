@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Subject;
 use App\Models\Classes;
-use App\Models\Teacher;
 use Yajra\DataTables\Facades\DataTables;
 
 class SubjectController extends Controller
@@ -17,18 +16,23 @@ class SubjectController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-
-            $subjects = Subject::with(['class', 'teacher'])->latest();
+            $yearId = session('selected_academic_year_id');
+            $subjects = Subject::with(['class'])
+                ->when($yearId, function ($query) use ($yearId) {
+                    $query->whereHas('class', function ($q) use ($yearId) {
+                        $q->where('academic_year_id', $yearId);
+                    });
+                })
+                ->when($request->filled('class_id'), function ($query) use ($request) {
+                    $query->where('class_id', (int) $request->input('class_id'));
+                })
+                ->latest();
 
             return DataTables::of($subjects)
                 ->addIndexColumn()
 
                 ->addColumn('class', function ($row) {
                     return '<span class="fw-semibold">' . ($row->class->name ?? 'N/A') . '</span>';
-                })
-
-                ->addColumn('teacher', function ($row) {
-                    return '<span class="fw-semibold">' . ($row->teacher->name ?? 'N/A') . '</span>';
                 })
 
                 ->addColumn('status', function ($row) {
@@ -66,11 +70,30 @@ class SubjectController extends Controller
                     </div>';
                 })
 
-                ->rawColumns(['class', 'teacher', 'status', 'action'])
+                ->rawColumns(['class', 'status', 'action'])
                 ->make(true);
         }
 
-        return view('subjects.index');
+        $classes = Classes::query()
+            ->when(session('selected_academic_year_id'), function ($q) {
+                $q->where('academic_year_id', session('selected_academic_year_id'));
+            })
+            ->orderBy('name')
+            ->get(['id', 'name']);
+
+        return view('subjects.index', compact('classes'));
+    }
+
+    public function create()
+    {
+        $classes = Classes::query()
+            ->when(session('selected_academic_year_id'), function ($q) {
+                $q->where('academic_year_id', session('selected_academic_year_id'));
+            })
+            ->orderBy('name')
+            ->get();
+
+        return view('subjects.create', compact('classes'));
     }
 
     /**
@@ -82,11 +105,10 @@ class SubjectController extends Controller
             'name'         => 'required|string|max:255',
             'subject_code' => 'required|string|max:50|unique:subjects,subject_code',
             'class_id'     => 'required|exists:classes,id',
-            'teacher_id'   => 'required|exists:teachers,id',
             'status'       => 'required|boolean',
         ]);
 
-        Subject::create($request->all());
+        Subject::create($request->only(['name', 'subject_code', 'class_id', 'status']));
 
         return redirect()->route('subjects.index')
             ->with('success', 'Subject created successfully.');
@@ -97,7 +119,7 @@ class SubjectController extends Controller
      */
     public function show($id)
     {
-        $subject = Subject::with(['class', 'teacher'])->findOrFail($id);
+        $subject = Subject::with(['class'])->findOrFail($id);
 
         return view('subjects.show', compact('subject'));
     }
@@ -109,9 +131,8 @@ class SubjectController extends Controller
     {
         $subject  = Subject::findOrFail($id);
         $classes  = Classes::all();
-        $teachers = Teacher::all();
 
-        return view('subjects.edit', compact('subject', 'classes', 'teachers'));
+        return view('subjects.edit', compact('subject', 'classes'));
     }
 
     /**
@@ -123,11 +144,10 @@ class SubjectController extends Controller
             'name'         => 'required|string|max:255',
             'subject_code' => 'required|string|max:50|unique:subjects,subject_code,' . $id,
             'class_id'     => 'required|exists:classes,id',
-            'teacher_id'   => 'required|exists:teachers,id',
             'status'       => 'required|boolean',
         ]);
 
-        Subject::findOrFail($id)->update($request->all());
+        Subject::findOrFail($id)->update($request->only(['name', 'subject_code', 'class_id', 'status']));
 
         return redirect()->route('subjects.index')
             ->with('success', 'Subject updated successfully.');
