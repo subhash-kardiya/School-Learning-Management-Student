@@ -6,7 +6,13 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\ParentModel;
 use App\Models\Role;
+use App\Models\ExamMark;
 use App\Models\Student;
+use App\Models\Classes;
+use App\Models\Section;
+use App\Models\Exam;
+use App\Models\TeacherMapping;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Yajra\DataTables\Facades\DataTables;
 
@@ -208,5 +214,19 @@ class ParentController extends Controller
     public function dashboard()
     {
         return view('dashboard.parent');
+    }
+
+    public function results(Request $request)
+    {
+        if (session('role') === 'student') {
+            return redirect()->route('student.results');
+        }
+        if (session('role') === 'teacher') {
+            return redirect()->route('teacher.results');
+        }
+        if (session('role') === 'parent') {
+            return redirect()->route('parent.results');
+        }
+        return redirect()->route('results.index');
     }
 }

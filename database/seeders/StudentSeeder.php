@@ -31,12 +31,9 @@ class StudentSeeder extends Seeder
         DB::statement('SET FOREIGN_KEY_CHECKS=1;');
 
         $class1 = Classes::orderBy('id')->first();
-        $class2 = Classes::orderBy('id')->skip(1)->first();
         $section1 = Section::orderBy('id')->first();
-        $section2 = Section::orderBy('id')->skip(1)->first();
         $year = AcademicYear::where('is_active', 1)->first() ?? AcademicYear::first();
         $parent1 = ParentModel::orderBy('id')->first();
-        $parent2 = ParentModel::orderBy('id')->skip(1)->first();
 
         if (!$class1 || !$section1 || !$year) {
             return;
@@ -79,10 +76,12 @@ class StudentSeeder extends Seeder
             'state' => 'Gujarat',
             'pincode' => '390001',
             'profile_image' => 'default_student.png',
-            'class_id' => ($class2?->id ?? $class1->id),
-            'section_id' => ($section2?->id ?? $section1->id),
+            // Keep both demo children in same class/section
+            'class_id' => $class1->id,
+            'section_id' => $section1->id,
             'academic_year_id' => $year->id,
-            'parent_id' => $parent2?->id ?? $parent1?->id,
+            // Map second child to same parent account
+            'parent_id' => $parent1?->id,
             'status' => 1,
         ]);
     }

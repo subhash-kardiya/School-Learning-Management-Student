@@ -20,6 +20,13 @@ use App\Http\Controllers\Admin\HomeworkController;
 use App\Http\Controllers\Admin\AttendanceController;
 use App\Http\Controllers\Admin\CertificateController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\Admin\ExamTypeController;
+use App\Http\Controllers\Admin\ExamController;
+use App\Http\Controllers\Admin\ExamMarkController;
+use App\Http\Controllers\Admin\ResultController as AdminResultController;
+use App\Http\Controllers\Teacher\ResultController as TeacherResultController;
+use App\Http\Controllers\Parent\ResultController as ParentResultController;
+
 
 
 // =====================
@@ -226,11 +233,32 @@ Route::middleware(['auth.session'])->prefix('admin')->group(function () {
     Route::get('/homework/submission', [HomeworkController::class, 'submissions'])->name('homework.submission');
     Route::post('/homework/submission/{id}/feedback', [HomeworkController::class, 'feedback'])->name('homework.submission.feedback');
 
-    Route::get('/exams/type', fn() => view('exams.type'))->name('exams.type');
-    Route::get('/exams/schedule', fn() => view('exams.schedule'))->name('exams.schedule');
-    Route::get('/exams/marks', fn() => view('exams.marks'))->name('exams.marks');
+    Route::get('/exams/data', [ExamController::class, 'index'])->name('exams.data');
+    Route::get('/exams/create', [ExamController::class, 'create'])->name('exams.createexam');
+    Route::post('/exams/store', [ExamController::class, 'store'])->name('exams.store');
+    Route::post('/exams/store-batch', [ExamController::class, 'batchStore'])->name('exams.store.batch');
+    Route::get('/exams/context-list', [ExamController::class, 'getExamsByContext'])->name('exams.context.list');
+    Route::get('/exams/schedule', [ExamController::class, 'schedule'])->name('exams.schedule');
+    Route::delete('/exams/{id}', [ExamController::class, 'destroy'])->whereNumber('id')->name('exams.destroy');
+    Route::get('/exams/{id}/edit', [ExamController::class, 'edit'])->whereNumber('id')->name('exams.edit');
+    Route::put('/exams/{id}', [ExamController::class, 'update'])->whereNumber('id')->name('exams.update');
+    Route::get('/exams/{id}', [ExamController::class, 'show'])->whereNumber('id')->name('exams.show');
+    Route::post('/exams/declare-result/{id}', [ExamController::class, 'declareResult'])->name('exams.declare-result');
+    Route::post('/exams/undeclare-result/{id}', [ExamController::class, 'undeclareResult'])->name('exams.undeclare-result');
+    
+    // Exam Marks
+    Route::get('/exams/marks', [ExamMarkController::class, 'index'])->name('exams.marks');
+    Route::get('/exams/marks/data', [ExamMarkController::class, 'data'])->name('exams.marks.data');
+    Route::post('/exams/marks/store', [ExamMarkController::class, 'store'])->name('exams.marks.store');
+    Route::delete('/exams/marks/{id}', [ExamMarkController::class, 'destroy'])->whereNumber('id')->name('exams.marks.destroy');
 
-    Route::get('/results', fn() => view('results.index'))->name('results.index');
+    // Exam Grades
+    Route::post('/exams/grades/store', [ExamMarkController::class, 'storeGrade'])->name('exams.grades.store');
+    Route::delete('/exams/grades/{id}', [ExamMarkController::class, 'destroyGrade'])->name('exams.grades.destroy');
+    Route::get('/exams/grades', [ExamMarkController::class, 'getGrades'])->name('exams.grades.list');
+
+    Route::get('/results', [AdminResultController::class, 'index'])->name('results.index');
+    Route::get('/results/{student}/{exam}/view', [AdminResultController::class, 'show'])->name('results.view');
 
     Route::get('/communication/announcements', fn() => view('communication.announcements'))->name('communication.announcements');
 
@@ -250,6 +278,8 @@ Route::middleware(['auth.session'])->prefix('admin')->group(function () {
 // =====================
 Route::middleware(['role:teacher'])->prefix('teacher')->group(function () {
     Route::get('/dashboard', [TeacherDashboardController::class, 'index'])->name('teacher.dashboard');
+    Route::get('/results', [TeacherResultController::class, 'index'])->name('teacher.results');
+    Route::get('/results/{student}/{exam}/view', [TeacherResultController::class, 'show'])->name('teacher.results.view');
 });
 
 // =====================
@@ -266,6 +296,7 @@ Route::middleware(['role:student'])->prefix('student')->group(function () {
     Route::get('/attendance', [AttendanceController::class, 'studentView'])->name('student.attendance');
     Route::get('/certificates', [CertificateController::class, 'studentIndex'])->name('student.certificate.index');
     Route::get('/certificates/{id}', [CertificateController::class, 'studentShow'])->name('student.certificate.show');
+    Route::get('/results', [StudentController::class, 'results'])->name('student.results');
 });
 
 // =====================
@@ -278,6 +309,7 @@ Route::middleware(['role:parent'])->prefix('parent')->group(function () {
         Route::get('/timetable/data', [TimetableController::class, 'parentData'])->name('parent.timetable.data');
     });
     Route::get('/attendance', [AttendanceController::class, 'parentView'])->name('parent.attendance');
+    Route::get('/results', [ParentResultController::class, 'index'])->name('parent.results');
 });
 
 // Logout

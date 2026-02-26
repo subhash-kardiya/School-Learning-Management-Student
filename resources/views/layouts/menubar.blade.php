@@ -197,8 +197,8 @@
         </a>
         <div class="collapse {{ $examsActive ? 'show' : '' }}" id="submenu-exams">
             @can('exam_type')
-                <a href="{{ route('exams.type') }}"
-                    class="ps-5 submenu {{ request()->routeIs('exams.type*') ? 'current-page' : '' }}">
+                <a href="{{ route('exams.createexam') }}"
+                    class="ps-5 submenu {{ request()->routeIs('exams.createexam*') ? 'current-page' : '' }}">
                     <i class="fas fa-tasks"></i> Exam Type
                 </a>
             @endcan
@@ -219,8 +219,12 @@
 
     <!-- 6️⃣ Results -->
     @can('result_view')
-        <a href="{{ route('results.index') }}"
-            class="d-flex align-items-center {{ request()->routeIs('results.*') ? 'current-page' : '' }}">
+        @php
+            $resultsRoute = ($isStudent ?? false) ? 'student.results' : 'results.index';
+            $resultsActive = request()->routeIs('results.*') || request()->routeIs('student.results');
+        @endphp
+        <a href="{{ route($resultsRoute) }}"
+            class="d-flex align-items-center {{ $resultsActive ? 'current-page' : '' }}">
             <i class="fa-solid fa-square-check fs-5 me-1"></i>
             <span>Results</span>
         </a>

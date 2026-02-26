@@ -10,9 +10,11 @@ use App\Models\Section;
 use App\Models\AcademicYear;
 use App\Models\ParentModel;
 use App\Models\Role;
+use App\Models\Exam;
 use Illuminate\Support\Facades\Hash;
 use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Support\Facades\DB;
+use App\Models\ExamMark;
 use Illuminate\Support\Facades\Auth;
 
 class StudentController extends Controller
@@ -194,8 +196,45 @@ class StudentController extends Controller
     public function show($id)
     {
         $student = Student::with(['class', 'section', 'academicYear', 'parent'])->findOrFail($id);
-        $this->enforceOwnStudentAccess($student);
-        return view('students.show', compact('student'));
+        $this->enforceOwnStudentAccess($student); // Ensures student/parent can only see their own/child's profile
+
+        $user = Auth::user();
+        $role = session('role');
+
+        $marksQuery = ExamMark::with(['exam', 'subject'])
+            ->whereHas('exam', fn($q) => $q->where('result_declared', 1));
+
+        if ($role === 'student' && $user) {
+            // For student role, we also need to calculate overall result.
+            $marksForOverall = (clone $marksQuery)->where('student_id', $id)->get();
+            if ($marksForOverall->isNotEmpty()) {
+                $totalObtained = (float) $marksForOverall->whereNotNull('marks_obtained')->sum('marks_obtained');
+                $totalMarks = (float) $marksForOverall->sum(fn($m) => (float) ($m->exam->total_mark ?? 0));
+                $overallPercentage = $totalMarks > 0 ? (($totalObtained / $totalMarks) * 100) : null;
+                $hasPassingRules = $marksForOverall->contains(fn($m) => $m->exam?->passing_mark !== null);
+
+                if ($hasPassingRules) {
+                    $overallPass = $marksForOverall->every(function ($m) {
+                        return $m->marks_obtained !== null
+                            && $m->exam?->passing_mark !== null
+                            && (float) $m->marks_obtained >= (float) $m->exam->passing_mark;
+                    });
+                } else {
+                    $overallPass = $overallPercentage !== null && $overallPercentage >= 60;
+                }
+                view()->share('overallResult', $overallPass ? 'Pass' : 'Fail');
+            }
+
+            $marksQuery->where('student_id', $user->id);
+        } elseif ($role === 'parent' && $user) {
+            // This logic is for a parent viewing a specific child's results.
+            // The enforceOwnStudentAccess already validates the parent-child relationship.
+            $marksQuery->where('student_id', $student->id);
+        } else {
+            $marksQuery->where('student_id', $id);
+        }
+        $marks = $marksQuery->latest('updated_at')->get();
+        return view('students.show', compact('student', 'marks'));
     }
 
     public function edit($id)
@@ -288,6 +327,171 @@ class StudentController extends Controller
         $class = Classes::with('teacher')->find($class_id);
         return response()->json([
             'teacher_name' => $class && $class->teacher ? $class->teacher->name : 'No teacher assigned'
+        ]);
+    }
+
+    public function results(Request $request)
+    {
+        $studentId = (int) session('auth_id');
+        if (session('role') !== 'student' || $studentId <= 0) {
+            abort(403, 'Unauthorized access.');
+        }
+
+        $student = Student::with(['class:id,name', 'section:id,name', 'academicYear:id,name'])->findOrFail($studentId);
+
+        $baseQuery = ExamMark::with(['exam', 'subject', 'student.class'])
+            ->where('student_id', $studentId)
+            ->where('class_id', $student->class_id)
+            ->where('section_id', $student->section_id)
+            ->whereHas('exam', function ($query) use ($student) {
+                $query->where('result_declared', 1)
+                    ->where('class_id', $student->class_id)
+                    ->where(function ($q) use ($student) {
+                        $q->whereNull('section_id')
+                            ->orWhere('section_id', $student->section_id);
+                    });
+            });
+
+        $examOptionsBase = Exam::with(['class:id,name', 'section:id,name', 'academicYear:id,name'])
+            ->where('result_declared', 1)
+            ->where('class_id', $student->class_id)
+            ->where(function ($query) use ($student) {
+                $query->whereNull('section_id')
+                    ->orWhere('section_id', $student->section_id);
+            })
+            ->whereIn('id', (clone $baseQuery)->pluck('exam_id')->unique()->values())
+            ->orderBy('name')
+            ->get(['id', 'name', 'class_id', 'section_id', 'academic_year_id']);
+
+        $selectedClassId = (int) $student->class_id;
+        $selectedSectionId = (int) $student->section_id;
+        $sessionOptions = $examOptionsBase
+            ->map(fn($exam) => $exam->academicYear)
+            ->filter()
+            ->unique('id')
+            ->sortBy('name')
+            ->values();
+
+        $selectedSessionId = $request->filled('session_id')
+            ? (int) $request->session_id
+            : (int) ($student->academic_year_id ?? 0);
+        if ($selectedSessionId && !$sessionOptions->contains('id', $selectedSessionId)) {
+            $selectedSessionId = (int) ($sessionOptions->first()->id ?? 0);
+        }
+        $selectedSession = $selectedSessionId ? $sessionOptions->firstWhere('id', $selectedSessionId) : null;
+
+        $examOptions = $selectedSessionId
+            ? $examOptionsBase->where('academic_year_id', $selectedSessionId)->values()
+            : collect();
+        $examNameOptions = $examOptions
+            ->pluck('name')
+            ->filter(fn($name) => trim((string) $name) !== '')
+            ->unique()
+            ->values();
+
+        $selectedExamName = $request->filled('exam_name') ? trim((string) $request->exam_name) : null;
+        if ($selectedExamName && !$examNameOptions->contains($selectedExamName)) {
+            $selectedExamName = null;
+        }
+
+        $enteredRollNo = trim((string) $request->input('roll_no', (string) ($student->roll_no ?? '')));
+
+        $marksQuery = (clone $baseQuery)->where('academic_year_id', $selectedSessionId);
+        if ($selectedExamName) {
+            $marksQuery->whereHas('exam', function ($query) use ($selectedExamName) {
+                $query->where('name', $selectedExamName);
+            });
+        }
+
+        if ($request->ajax()) {
+            $ajaxQuery = (clone $baseQuery);
+            if (!empty($selectedSessionId)) {
+                $ajaxQuery->where('academic_year_id', $selectedSessionId);
+            }
+            if (!empty($selectedExamName)) {
+                $ajaxQuery->whereHas('exam', function ($query) use ($selectedExamName) {
+                    $query->where('name', $selectedExamName);
+                });
+            } else {
+                // Keep table empty until exam is selected.
+                $ajaxQuery->whereRaw('1 = 0');
+            }
+
+            return DataTables::of($ajaxQuery)
+                ->addIndexColumn()
+                ->addColumn('subject_name', fn($row) => $row->subject->name ?? '-')
+                ->addColumn('grade_value', fn($row) => $row->grade ?? '-')
+                ->addColumn('total_mark_value', fn($row) => $row->exam->total_mark ?? '-')
+                ->addColumn('passing_mark_value', fn($row) => $row->exam->passing_mark ?? '-')
+                ->addColumn('obtained_mark_value', fn($row) => $row->marks_obtained ?? '-')
+                ->make(true);
+        }
+
+        $marks = $marksQuery->latest('updated_at')->get();
+
+        $selectedExam = $selectedExamName
+            ? $examOptions->firstWhere('name', $selectedExamName)
+            : null;
+        $selectedStudentName = $student->student_name ?? '-';
+        $selectedRollNo = $enteredRollNo !== '' ? $enteredRollNo : ($student->roll_no ?? '-');
+        $selectedAcademicYearName = $selectedSession->name ?? ($student->academicYear->name ?? '-');
+        $selectedClassSectionName = ($student->class->name ?? '-')
+            . ($student->section ? ' - ' . $student->section->name : '');
+        $selectedExamType = $selectedExamName ?: '-';
+
+        $canShowResult = !empty($selectedSessionId)
+            && !empty($selectedExamName)
+            && trim((string) $selectedStudentName) !== ''
+            && trim((string) $selectedStudentName) !== '-'
+            && trim((string) $selectedRollNo) !== ''
+            && trim((string) $selectedRollNo) !== '-'
+            && trim((string) $selectedAcademicYearName) !== ''
+            && trim((string) $selectedAcademicYearName) !== '-'
+            && trim((string) $selectedClassSectionName) !== ''
+            && trim((string) $selectedClassSectionName) !== '-';
+
+        $overallGrade = null;
+        if ($canShowResult && $marks->isNotEmpty()) {
+            $totalObtained = (float) $marks->whereNotNull('marks_obtained')->sum('marks_obtained');
+            $totalMarks = (float) $marks->sum(fn($m) => (float) ($m->exam->total_mark ?? 0));
+            if ($totalMarks > 0) {
+                $overallPercentage = round(($totalObtained / $totalMarks) * 100, 2);
+                
+                // Use the same grading rules as ExamMarkController
+                $examMarkController = new ExamMarkController();
+                // This requires making resolveGradeFromPercentage public in ExamMarkController
+                // For now, let's duplicate the logic to avoid changing method visibility.
+                $gradeRules = collect((new \App\Http\Controllers\Admin\ExamMarkController)->defaultGradeRules());
+                $gradeInfo = (new \App\Http\Controllers\Admin\ExamMarkController)->resolveGradeFromPercentage($overallPercentage, $gradeRules);
+                $overallGrade = $gradeInfo['name'] ?? null;
+            }
+        }
+
+        return view('results.index', [
+            'marks' => $marks,
+            'studentProfile' => $student,
+            'selectedExam' => $selectedExam,
+            'selectedSession' => $selectedSession,
+            'studentResultFilters' => true,
+            'classOptions' => collect([$student->class])->filter(),
+            'sectionOptions' => collect([$student->section])->filter(),
+            'sessionOptions' => $sessionOptions,
+            'examOptions' => $examOptions,
+            'examNameOptions' => $examNameOptions,
+            'selectedClassId' => $selectedClassId,
+            'selectedSectionId' => $selectedSectionId,
+            'selectedSessionId' => $selectedSessionId,
+            'selectedExamName' => $selectedExamName,
+            'enteredRollNo' => $enteredRollNo,
+            'selectedStudentName' => $selectedStudentName,
+            'selectedRollNo' => $selectedRollNo,
+            'selectedAcademicYearName' => $selectedAcademicYearName,
+            'selectedClassSectionName' => $selectedClassSectionName,
+            'selectedExamType' => $selectedExamType,
+            'canShowResult' => $canShowResult,
+            'overallGrade' => $overallGrade,
+            'useAjaxStudentResults' => true,
+            'layout' => $request->boolean('print') ? 'layouts.print' : 'layouts.admin',
         ]);
     }
 }
