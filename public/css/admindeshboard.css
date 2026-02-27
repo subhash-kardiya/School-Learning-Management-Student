@@ -1558,3 +1558,65 @@
     border-radius: 10px;
     background: #f8fbff;
 }
+
+/* White premium dashboard theme override */
+.adminx-dashboard {
+    background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+    border: 1px solid #e7edf6;
+    border-radius: 14px;
+    padding: 14px;
+}
+
+.adminx-kpi-item {
+    background: #ffffff !important;
+    border: 1px solid #e3ebf6 !important;
+    box-shadow: 0 10px 26px rgba(15, 23, 42, 0.07) !important;
+}
+
+.adminx-kpi-item small {
+    color: #5b6475 !important;
+}
+
+.adminx-kpi-item strong {
+    color: #0f172a !important;
+}
+
+.adminx-kpis .adminx-kpi-link:nth-child(1) .adminx-kpi-item,
+.adminx-kpis .adminx-kpi-link:nth-child(2) .adminx-kpi-item,
+.adminx-kpis .adminx-kpi-link:nth-child(3) .adminx-kpi-item,
+.adminx-kpis .adminx-kpi-link:nth-child(4) .adminx-kpi-item,
+.adminx-kpis .adminx-kpi-link:nth-child(5) .adminx-kpi-item {
+    background: #ffffff !important;
+}
+
+.adminx-kpi-item.is-highlight {
+    border-color: #d6e3f6 !important;
+    box-shadow: 0 12px 30px rgba(37, 99, 235, 0.1) !important;
+}
+
+.adminx-kpi-item::after {
+    opacity: 0;
+}
+
+.adminx-card {
+    background: #ffffff;
+    border: 1px solid #e5ecf6;
+    border-radius: 14px;
+    box-shadow: 0 8px 22px rgba(15, 23, 42, 0.06);
+}
+
+.adminx-card::before {
+    background: linear-gradient(180deg, rgba(59, 130, 246, 0.03), rgba(59, 130, 246, 0));
+}
+
+.adminx-card:hover {
+    border-color: #d7e4f6;
+    box-shadow: 0 14px 32px rgba(15, 23, 42, 0.1);
+}
+
+.adminx-chart-wrap-line,
+.adminx-chart-wrap-bar,
+.adminx-chart-wrap-donut {
+    background: linear-gradient(180deg, #fcfdff 0%, #f4f8ff 100%);
+    border: 1px solid #e7edf7;
+}

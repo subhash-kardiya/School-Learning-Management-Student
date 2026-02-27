@@ -28,45 +28,58 @@
         $teacherRecentSubmissions = collect($recentSubmissions ?? [])->values();
         $teacherAnnouncements = collect($latestAnnouncements ?? [])->values();
         $teacherQuickActions = collect($quickActions ?? [])->values();
+
+        $teacherClassesUrl = route('teacher.timetable');
+        $teacherStudentsUrl = route('teacher.attendance.mark');
+        $teacherLecturesUrl = route('teacher.timetable');
+        $teacherPendingUrl = route('teacher.homework.list');
     @endphp
 
     <div class="td2-shell">
         <div class="td2-top">
-            <div class="td2-top-card c1">
-                <i class="bi bi-journals"></i>
-                <strong>{{ $teacherAssignedClasses }}</strong>
-                <span>Total Classes</span>
-            </div>
-            <div class="td2-top-card c2">
-                <i class="bi bi-mortarboard"></i>
-                <strong>{{ $teacherStudents }}</strong>
-                <span>Total Students</span>
-            </div>
-            <div class="td2-top-card c3">
-                <i class="bi bi-calendar3"></i>
-                <strong>{{ $teacherLecturesToday }}</strong>
-                <span>Today's Lectures</span>
-            </div>
+            <a href="{{ $teacherClassesUrl }}" class="td2-top-link" title="Open Class Schedule">
+                <div class="td2-top-card c1">
+                    <i class="bi bi-journals"></i>
+                    <strong>{{ $teacherAssignedClasses }}</strong>
+                    <span>Total Classes</span>
+                </div>
+            </a>
+            <a href="{{ $teacherStudentsUrl }}" class="td2-top-link" title="Open Attendance Marking">
+                <div class="td2-top-card c2">
+                    <i class="bi bi-mortarboard"></i>
+                    <strong>{{ $teacherStudents }}</strong>
+                    <span>Total Students</span>
+                </div>
+            </a>
+            <a href="{{ $teacherLecturesUrl }}" class="td2-top-link" title="Open Today's Timetable">
+                <div class="td2-top-card c3">
+                    <i class="bi bi-calendar3"></i>
+                    <strong>{{ $teacherLecturesToday }}</strong>
+                    <span>Today's Lectures</span>
+                </div>
+            </a>
 
-            <div class="td2-top-card c4">
-                <i class="bi bi-journal-check"></i>
-                <strong>{{ $teacherPendingReview }}</strong>
-                <span>Pending Review</span>
-            </div>
+            <a href="{{ $teacherPendingUrl }}" class="td2-top-link" title="Open Pending Homework Review">
+                <div class="td2-top-card c4">
+                    <i class="bi bi-journal-check"></i>
+                    <strong>{{ $teacherPendingReview }}</strong>
+                    <span>Pending Review</span>
+                </div>
+            </a>
         </div>
 
         <div class="td2-main">
             <div class="td2-card td2-performance">
                 <div class="td2-head">
                     <h6>Today Present vs Absent (Assigned Classes)</h6>
-                    <a href="#">View All</a>
+                    <a href="{{ route('teacher.attendance.mark') }}">View All</a>
                 </div>
                 <canvas id="tdStudentPerformance"></canvas>
             </div>
             <div class="td2-card td2-attendance">
                 <div class="td2-head">
                     <h6>Today's Lectures</h6>
-                    <a href="#">View All</a>
+                    <a href="{{ route('teacher.timetable') }}">View All</a>
                 </div>
                 <div class="td2-lecture-meta">
                     <span>{{ $teacherLecturesToday }} lectures today</span>
@@ -123,7 +136,7 @@
             <div class="td2-card td2-classes">
                 <div class="td2-head">
                     <h6>My Classes</h6>
-                    <a href="#">View All</a>
+                    <a href="{{ route('teacher.timetable') }}">View All</a>
                 </div>
                 <div class="table-responsive">
                     <table class="table table-sm mb-0">
@@ -154,7 +167,7 @@
             <div class="td2-card td2-submissions">
                 <div class="td2-head">
                     <h6>Recent Submissions</h6>
-                    <a href="#">View All</a>
+                    <a href="{{ route('teacher.homework.list') }}">View All</a>
                 </div>
                 <ul class="td2-sub-list">
                     @forelse ($teacherRecentSubmissions as $row)
@@ -208,7 +221,7 @@
             <div class="td2-card td2-notice">
                 <div class="td2-head">
                     <h6>Announcements</h6>
-                    <a href="#">View All</a>
+                    <a href="{{ route('teacher.communication.announcements') }}">View All</a>
                 </div>
                 <ul class="td2-notice-list">
                     @forelse ($teacherAnnouncements as $announcement)
