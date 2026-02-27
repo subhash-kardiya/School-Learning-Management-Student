@@ -3,7 +3,7 @@
 @section('title', 'Class Timetable')
 
 @section('content')
-    <div class="container-fluid py-4 tt-skin-classic timetable-module-compact">
+    <div class="container-fluid py-4 tt-skin-classic">
         <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2 tt-page-head">
             <div>
                 <h5 class="mb-1">Class Timetable</h5>
@@ -115,12 +115,13 @@
                 'classes' => $classes,
                 'sections' => $sections,
                 'teachers' => $teachers,
+                'academicYears' => $academicYears,
             ],
             'config' => [
                 'title' => 'Timetable',
                 'showClass' => true,
                 'showSection' => true,
-                'showAcademicYear' => false,
+                'showAcademicYear' => true,
                 'showTeacher' => false,
                 'showWeek' => false,
                 'showExport' => true,

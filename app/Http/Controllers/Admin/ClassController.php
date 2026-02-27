@@ -7,21 +7,13 @@ use App\Models\Classes;
 use Illuminate\Http\Request;
 use App\Models\AcademicYear;
 use App\Models\Teacher;
-use Illuminate\Validation\Rule;
 
 class ClassController extends Controller
 {
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $query = Classes::with(['teacher', 'academicYear'])
-                ->when(session('selected_academic_year_id'), function($q) {
-                    $q->where('academic_year_id', session('selected_academic_year_id'));
-                })
-                ->when($request->filled('class_name'), function ($q) use ($request) {
-                    $q->where('name', $request->input('class_name'));
-                })
-                ->latest();
+            $query = Classes::with(['teacher', 'academicYear'])->latest();
             return datatables()->of($query)
                 ->addIndexColumn()
                 ->addColumn('academic_year', function($row){
@@ -60,45 +52,27 @@ class ClassController extends Controller
                 ->rawColumns(['status', 'action', 'academic_year', 'teacher', 'DT_RowIndex'])
                 ->make(true);
         }
-        $classes = Classes::query()
-            ->when(session('selected_academic_year_id'), function ($q) {
-                $q->where('academic_year_id', session('selected_academic_year_id'));
-            })
-            ->select('name')
-            ->distinct()
-            ->orderBy('name')
-            ->get();
+        $classes = Classes::all();
         return view('classes.index', compact('classes'));
     }
 
    public function create()
 {
-    $academicYears = AcademicYear::where('is_active', 1)->where('is_locked', 0)->orderBy('name')->get(); // Active academic year only
+    $academicYears = AcademicYear::all(); // Academic years fetch
     $teachers = Teacher::all(); // Teachers fetch
 
     return view('classes.create', compact('academicYears', 'teachers'));
 }
     public function store(Request $request)
     {
-        $activeYearId = (int) (AcademicYear::where('is_active', 1)->where('is_locked', 0)->value('id') ?? 0);
-        if ($activeYearId <= 0) {
-            return back()->with('error', 'No active academic year available.')->withInput();
-        }
-
         $request->validate([
             'name' => 'required|string|max:255',
-            'academic_year_id' => [
-                'required',
-                'integer',
-                Rule::exists('academic_years', 'id')->where(fn ($q) => $q->where('is_active', 1)->where('is_locked', 0)),
-            ],
+            'academic_year_id' => 'required|integer|exists:academic_years,id',
             'class_teacher_id' => 'required|integer|exists:teachers,id',
             'status' => 'required|integer|in:0,1',
         ]);
 
-        $payload = $request->only(['name', 'class_teacher_id', 'status']);
-        $payload['academic_year_id'] = $activeYearId;
-        Classes::create($payload);
+        Classes::create($request->all());
 
         return redirect()->route('classes.index')->with('success', 'Class added successfully.');
     }
@@ -106,7 +80,7 @@ class ClassController extends Controller
     public function show($id)
     {
         $class = Classes::findOrFail($id);
-        $academicYears = AcademicYear::where('is_active', 1)->where('is_locked', 0)->orderBy('name')->get();
+        $academicYears = AcademicYear::all();
         $teachers = Teacher::all();
 
         return view('classes.show', compact('class', 'academicYears', 'teachers'));
@@ -114,33 +88,22 @@ class ClassController extends Controller
 
     public function edit($id) {
         $class = Classes::findOrFail($id);
-        $academicYears = AcademicYear::where('is_active', 1)->where('is_locked', 0)->orderBy('name')->get();
+        $academicYears = AcademicYear::all();
         $teachers = Teacher::all();
 
         return view('classes.edit', compact('class', 'academicYears', 'teachers'));
     }
 
 public function update(Request $request, $id) {
-    $activeYearId = (int) (AcademicYear::where('is_active', 1)->where('is_locked', 0)->value('id') ?? 0);
-    if ($activeYearId <= 0) {
-        return back()->with('error', 'No active academic year available.')->withInput();
-    }
-
     $request->validate([
         'name' => 'required|string|max:255',
-        'academic_year_id' => [
-            'required',
-            'integer',
-            Rule::exists('academic_years', 'id')->where(fn ($q) => $q->where('is_active', 1)->where('is_locked', 0)),
-        ],
+        'academic_year_id' => 'required|integer|exists:academic_years,id',
         'class_teacher_id' => 'required|integer|exists:teachers,id',
         'status' => 'required|integer|in:0,1',
     ]);
 
     $class = Classes::findOrFail($id);
-    $payload = $request->only(['name', 'class_teacher_id', 'status']);
-    $payload['academic_year_id'] = $activeYearId;
-    $class->update($payload);
+    $class->update($request->all());
     return redirect()->route('classes.index')->with('success', 'Class updated successfully.');
 }
 

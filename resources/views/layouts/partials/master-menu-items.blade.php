@@ -25,7 +25,8 @@
 @endcan
 
 @canany(['role_view', 'role_add', 'role_edit', 'role_delete'])
-    <a href="{{ route('roles.index') }}" class="ps-5 submenu {{ request()->routeIs('roles.*') ? 'current-page' : '' }}">
+    <a href="{{ route('roles.index') }}"
+        class="ps-5 submenu {{ request()->routeIs('roles.*') ? 'current-page' : '' }}">
         <i class="fa-solid fa-user-shield"></i> Role and Permission
     </a>
 @endcanany
@@ -44,9 +45,10 @@
     </a>
 @endcan
 
-@can('room_manage')
-    <a href="{{ route('rooms.index') }}" class="ps-5 submenu {{ request()->routeIs('rooms.*') ? 'current-page' : '' }}">
-        <i class="fas fa-door-open"></i> Room
+@can('parent_manage')
+    <a href="{{ route('parents.index') }}"
+        class="ps-5 submenu {{ request()->routeIs('parents.*') ? 'current-page' : '' }}">
+        <i class="fa-solid fa-users"></i> Parents
     </a>
 @endcan
 
@@ -57,20 +59,9 @@
     </a>
 @endcan
 
-@php
-    $menuUser = auth()->user();
-    $isSuperAdminMenu = $menuUser && method_exists($menuUser, 'hasRole') && (
-        $menuUser->hasRole('superadmin') ||
-        $menuUser->hasRole('super admin') ||
-        $menuUser->hasRole('super_admin') ||
-        $menuUser->hasRole('SuperAdmin') ||
-        $menuUser->hasRole('Super Admin')
-    );
-    $canManageCertificateMenu = $menuUser && method_exists($menuUser, 'hasPermission') && $menuUser->hasPermission('certificate_manage');
-@endphp
-@if ($isSuperAdminMenu || $canManageCertificateMenu)
-    <a href="{{ route('certificate.index', ['status' => 'pending']) }}"
+@can('certificate_manage')
+    <a href="{{ route('certificate.index') }}"
         class="ps-5 submenu {{ request()->routeIs('certificate.*') ? 'current-page' : '' }}">
-        <i class="fa-solid fa-certificate"></i> Certificate Requests
+        <i class="fa-solid fa-certificate"></i> Certificate
     </a>
-@endif
+@endcan

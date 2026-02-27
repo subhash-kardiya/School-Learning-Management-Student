@@ -38,12 +38,11 @@
                     @csrf
                     <div class="mb-4">
                         <label class="form-label forgot-txt">One Time Password</label>
-                        <input type="text" name="otp"
-                            class="form-control text-center fs-4 @error('otp') is-invalid @enderror" maxlength="6"
-                            style="letter-spacing: 10px;" value="{{ old('otp') }}" required>
-                        @error('otp')
-                            <div class="invalid-feedback d-block">{{ $message }}</div>
-                        @enderror
+                        <input type="text" name="otp" class="form-control text-center fs-4" maxlength="6"
+                            style="letter-spacing: 10px;" required>
+                        <div class="form-text text-end mt-2">
+                            <a href="#" class="text-decoration-none small">Resend OTP?</a>
+                        </div>
                     </div>
                     <button type="submit" class="btn w-100 fs-6">Verify</button>
                 </form>

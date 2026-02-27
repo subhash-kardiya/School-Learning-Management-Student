@@ -7,24 +7,6 @@ use App\Models\Permission;
 
 trait HasPermissions
 {
-    protected function resolveRoleModel(): ?Role
-    {
-        // Teachers now use a fixed "teacher" role instead of storing role_id.
-        if ($this instanceof \App\Models\Teacher) {
-            static $teacherRole = false;
-            if ($teacherRole === false) {
-                $teacherRole = Role::whereRaw('LOWER(name) = ?', ['teacher'])->first();
-            }
-            return $teacherRole ?: null;
-        }
-
-        if ($this->relationLoaded('role')) {
-            return $this->getRelation('role');
-        }
-
-        return $this->role;
-    }
-
     public function role()
     {
         return $this->belongsTo(Role::class);
@@ -32,12 +14,11 @@ trait HasPermissions
 
     public function hasRole($role)
     {
-        $resolvedRole = $this->resolveRoleModel();
-        if (!$resolvedRole) {
+        if (!$this->role) {
             return false;
         }
 
-        $current = strtolower((string) $resolvedRole->name);
+        $current = strtolower((string) $this->role->name);
         if (is_array($role)) {
             $roles = array_map(fn($r) => strtolower((string) $r), $role);
             return in_array($current, $roles, true);
@@ -48,18 +29,15 @@ trait HasPermissions
 
     public function hasPermission($slug)
     {
-        $resolvedRole = $this->resolveRoleModel();
-        if (!$resolvedRole) {
+        if (!$this->role) {
             return false;
         }
 
         static $permissions = [];
-        $cacheKey = $resolvedRole->id ?: strtolower((string) $resolvedRole->name);
-
-        if (!isset($permissions[$cacheKey])) {
-            $permissions[$cacheKey] = $resolvedRole->permissions->pluck('slug')->toArray();
+        if (!isset($permissions[$this->role_id])) {
+            $permissions[$this->role_id] = $this->role->permissions->pluck('slug')->toArray();
         }
 
-        return in_array($slug, $permissions[$cacheKey]);
+        return in_array($slug, $permissions[$this->role_id]);
     }
 }

@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Teacher;
+use App\Models\Role;
+use App\Models\Subject;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Yajra\DataTables\Facades\DataTables;
@@ -14,6 +16,7 @@ class TeacherController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
+
             $query = Teacher::latest();
             if ($request->filled('status')) {
                 $query->where('status', $request->status);
@@ -121,7 +124,10 @@ class TeacherController extends Controller
         if (!$user || !$user->hasPermission('teacher_add')) {
             abort(403, 'Unauthorized access');
         }
-        return view('teachers.create');
+        $teacherRole = Role::where('name', 'Teacher')->orWhere('name', 'teacher')->first();
+        $roles = $teacherRole ? collect([$teacherRole]) : Role::all();
+        $subjects = Subject::orderBy('name')->get();
+        return view('teachers.create', compact('roles', 'subjects', 'teacherRole'));
     }
 
     public function store(Request $request)
@@ -130,37 +136,21 @@ class TeacherController extends Controller
         if (!$user || !$user->hasPermission('teacher_add')) {
             abort(403, 'Unauthorized access');
         }
-         $request->validate([
-        // Professional Identity
-        'name' => 'required|string|max:255',
-        'username' => 'required|string|max:100|unique:teachers,username',
-        'email' => 'required|email|unique:teachers,email',
-        'password' => 'required|min:8',
-        'mobile_no' => 'required|digits_between:10,15',
-        'gender' => 'required|in:male,female,other',
-
-        // Personal Details
-        'date_of_birth' => 'required|date|before:today',
-        'join_date' => 'required|date|after_or_equal:date_of_birth',
-
-        // Address
-        'address' => 'required|string|max:500',
-        'city' => 'required|string|max:100',
-        'state' => 'required|string|max:100',
-        'pincode' => 'required|digits:6',
-
-        // Qualification & Experience
-        'qualification' => 'required|string|max:255',
-        'exp' => 'required|integer|min:0|max:50',
-
-        // Status
-        'status' => 'required|boolean',
-
-        // Profile Image
-        'profile_image' => 'required|image|mimes:jpg,jpeg,png|max:2048',
-    ]);
+        $request->validate([
+            'role_id'  => 'required',
+            'name'     => 'required',
+            'email'    => 'required|email|unique:teachers',
+            'username' => 'required|unique:teachers',
+            'password' => 'required|min:6',
+            'subject_ids' => 'array',
+            'subject_ids.*' => 'exists:subjects,id',
+        ]);
 
         $data = $request->all();
+        $teacherRole = Role::where('name', 'Teacher')->orWhere('name', 'teacher')->first();
+        if ($teacherRole) {
+            $data['role_id'] = $teacherRole->id;
+        }
         $data['password'] = Hash::make($request->password);
 
         if ($request->hasFile('profile_image')) {
@@ -171,6 +161,10 @@ class TeacherController extends Controller
         }
 
         $teacher = Teacher::create($data);
+
+        if ($request->filled('subject_ids')) {
+            Subject::whereIn('id', $request->subject_ids)->update(['teacher_id' => $teacher->id]);
+        }
 
         return redirect()->route('teachers.index')->with('success', 'Teacher Added Successfully');
     }
@@ -183,7 +177,11 @@ class TeacherController extends Controller
             abort(403, 'Unauthorized access');
         }
         $teacher = Teacher::findOrFail($id);
-        return view('teachers.edit', compact('teacher'));
+        $teacherRole = Role::where('name', 'Teacher')->orWhere('name', 'teacher')->first();
+        $roles = $teacherRole ? collect([$teacherRole]) : Role::all();
+        $subjects = Subject::orderBy('name')->get();
+        $assignedSubjectIds = Subject::where('teacher_id', $teacher->id)->pluck('id')->toArray();
+        return view('teachers.edit', compact('teacher', 'roles', 'subjects', 'assignedSubjectIds', 'teacherRole'));
     }
 
     // UPDATE
@@ -196,36 +194,19 @@ class TeacherController extends Controller
         $teacher = Teacher::findOrFail($id);
 
         $request->validate([
-            // Professional Identity
-            'name' => 'required|string|max:255',
-            'username' => 'required|string|max:100|unique:teachers,username,' . $id,
-            'email' => 'required|email|unique:teachers,email,' . $id,
-            'password' => 'nullable|min:8',
-            'mobile_no' => 'required|digits_between:10,15',
-            'gender' => 'required|in:male,female,other',
-
-            // Personal Details
-            'date_of_birth' => 'required|date|before:today',
-            'join_date' => 'required|date|after_or_equal:date_of_birth',
-
-            // Address
-            'address' => 'required|string|max:500',
-            'city' => 'required|string|max:100',
-            'state' => 'required|string|max:100',
-            'pincode' => 'required|digits:6',
-
-            // Qualification & Experience
-            'qualification' => 'required|string|max:255',
-            'exp' => 'required|integer|min:0|max:50',
-
-            // Status
-            'status' => 'required|boolean',
-
-            // Profile Image
-            'profile_image' => 'required|image|mimes:jpg,jpeg,png|max:2048',
+            'role_id'  => 'required',
+            'name'     => 'required',
+            'email'    => 'required|email|unique:teachers,email,' . $id,
+            'username' => 'required|unique:teachers,username,' . $id,
+            'subject_ids' => 'array',
+            'subject_ids.*' => 'exists:subjects,id',
         ]);
 
         $data = $request->all();
+        $teacherRole = Role::where('name', 'Teacher')->orWhere('name', 'teacher')->first();
+        if ($teacherRole) {
+            $data['role_id'] = $teacherRole->id;
+        }
 
         if ($request->password) {
             $data['password'] = Hash::make($request->password);
@@ -246,13 +227,21 @@ class TeacherController extends Controller
 
         $teacher->update($data);
 
+        $subjectIds = $request->input('subject_ids', []);
+        Subject::where('teacher_id', $teacher->id)
+            ->whereNotIn('id', $subjectIds)
+            ->update(['teacher_id' => null]);
+        if (!empty($subjectIds)) {
+            Subject::whereIn('id', $subjectIds)->update(['teacher_id' => $teacher->id]);
+        }
+
         return redirect()->route('teachers.index')->with('success', 'Teacher Updated');
     }
 
     // SHOW
     public function show($id)
     {
-        $teacher = Teacher::with(['subjects'])->findOrFail($id);
+        $teacher = Teacher::with(['role', 'subjects'])->findOrFail($id);
         return view('teachers.show', compact('teacher'));
     }
 

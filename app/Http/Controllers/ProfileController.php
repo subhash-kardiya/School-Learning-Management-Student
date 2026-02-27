@@ -94,7 +94,6 @@ class ProfileController extends Controller
 
         $user->save();
 
-        $profileRoute = $role === 'teacher' ? 'teacher.profile.show' : 'profile.show';
-        return redirect()->route($profileRoute)->with('success', 'Profile updated successfully.');
+        return redirect()->route('profile.show')->with('success', 'Profile updated successfully.');
     }
 }

@@ -1,14 +1,13 @@
 @extends('layouts.admin')
 
-@section('title', 'Parent Dashboard (' . ($globalAcademicYears->firstWhere('id', $selectedAcademicYearId)->name ??
-    'Demo') . ')')
+@section('title', 'Parent Dashboard')
 
 @section('content')
     <div id="dashboard-content">
         <div class="row g-4 mb-4">
             <div class="col-md-4">
                 <div class="stats-card">
-                    <div class="d-flex justify-content-between align-items-center">
+                    <div class="d-flex justify-content-between align-items-start">
                         <div>
                             <h6 class="text-muted mb-2">Child's Attendance</h6>
                             <h3 class="fw-bold mb-0">88%</h3>
@@ -21,7 +20,7 @@
             </div>
             <div class="col-md-4">
                 <div class="stats-card">
-                    <div class="d-flex justify-content-between align-items-center">
+                    <div class="d-flex justify-content-between align-items-start">
                         <div>
                             <h6 class="text-muted mb-2">Fee Status</h6>
                             <h3 class="fw-bold mb-0 text-success">Paid</h3>
@@ -34,7 +33,7 @@
             </div>
             <div class="col-md-4">
                 <div class="stats-card">
-                    <div class="d-flex justify-content-between align-items-center">
+                    <div class="d-flex justify-content-between align-items-start">
                         <div>
                             <h6 class="text-muted mb-2">Exams Grade</h6>
                             <h3 class="fw-bold mb-0">B+</h3>
@@ -88,21 +87,18 @@
                         <h5 class="fw-bold mb-0">School Notices</h5>
                     </div>
                     <div class="card-body">
-                        @forelse($latestAnnouncements ?? [] as $announcement)
-                            <div class="alert alert-light border mb-3" role="alert">
-                                <div class="d-flex">
-                                    <i class="fas fa-bullhorn mt-1 me-2 text-primary"></i>
-                                    <div>
-                                        <strong>{{ $announcement->title }}</strong><br>
-                                        <small>{{ \Illuminate\Support\Str::limit($announcement->description, 75) }}</small>
-                                    </div>
-                                </div>
+                        <div class="alert alert-info border-0 mb-3" role="alert">
+                            <div class="d-flex">
+                                <i class="fas fa-envelope-open-text mt-1 me-2"></i>
+                                <div><strong>PTM:</strong><br>Parents Teacher Meeting on Saturday.</div>
                             </div>
-                        @empty
-                            <div class="alert alert-light border mb-0" role="alert">
-                                No announcements available.
+                        </div>
+                        <div class="alert alert-light border mb-0" role="alert">
+                            <div class="d-flex">
+                                <i class="fas fa-clock mt-1 me-2 text-warning"></i>
+                                <div><strong>Fee Reminder:</strong><br>Next quarter fee due by 15th Feb.</div>
                             </div>
-                        @endforelse
+                        </div>
                     </div>
                 </div>
             </div>

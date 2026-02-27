@@ -26,11 +26,8 @@ return new class extends Migration
         Schema::create('password_reset_tokens', function (Blueprint $table) {
             $table->string('email')->primary();
             $table->string('token');
-            $table->timestamp('expires_at');
-            $table->integer('attempts')->default(0);
-            $table->timestamps();
+            $table->timestamp('created_at')->nullable();
         });
-
 
         Schema::create('sessions', function (Blueprint $table) {
             $table->string('id')->primary();

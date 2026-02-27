@@ -1,7 +1,7 @@
 <?php $__env->startSection('title', 'Section Details'); ?>
 
 <?php $__env->startSection('content'); ?>
-    <div class="container-fluid py-4 section-module-compact">
+    <div class="container-fluid py-4">
 
         <!-- Header -->
         <div class="d-flex justify-content-between align-items-center mb-4">
@@ -9,10 +9,7 @@
                 <a href="<?php echo e(route('section.index')); ?>" class="btn btn-link text-decoration-none text-muted p-0 mb-2">
                     <i class="fas fa-arrow-left me-1"></i> Back to Sections
                 </a>
-@push('css')
-    <link rel="stylesheet" href="{{ asset('css/resize/section-compact.css') }}">
-@endpush
-</div>
+            </div>
             <div class="d-flex gap-2">
                 <a href="<?php echo e(route('section.edit', $section->id)); ?>" class="btn btn-primary-fancy shadow-sm">
                     <i class="fa fa-pen me-2"></i> Edit Section

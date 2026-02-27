@@ -16,7 +16,6 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Yajra\DataTables\Facades\DataTables;
 
-// Parent master menu/controller removed. Kept as empty stub to avoid filesystem delete issues.
 class ParentController extends Controller
 {
     public function index()

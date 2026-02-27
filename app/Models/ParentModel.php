@@ -15,13 +15,18 @@ class ParentModel extends Authenticatable
 
     protected $fillable = [
         'role_id',
-        'school_id',
         'parent_name',
         'username',
         'email',
         'password',
         'mobile_no',
+        'gender',
+        'date_of_birth',
         'address',
+        'city',
+        'state',
+        'pincode',
+        'profile_image',
         'status',
     ];
 

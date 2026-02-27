@@ -2,10 +2,6 @@
 
 @section('title', 'Teacher Dashboard')
 
-@push('css')
-    <link rel="stylesheet" href="{{ asset('css/teacher-dashboard.css') }}">
-@endpush
-
 @section('content')
     @php
         $performanceLabels = collect($classAttendanceLabels ?? [])->values();
@@ -74,7 +70,6 @@
                     <h6>Today Present vs Absent (Assigned Classes)</h6>
                     <a href="{{ route('teacher.attendance.mark') }}">View All</a>
                 </div>
-                <canvas id="tdStudentPerformance"></canvas>
             </div>
             <div class="td2-card td2-attendance">
                 <div class="td2-head">
@@ -97,28 +92,14 @@
                                     </article>
                                 @endforeach
                             </div>
-                            <div class="td2-lecture-group" aria-hidden="true">
-                                @foreach ($teacherTodaySchedule as $lecture)
-                                    <article class="td2-lecture-item">
-                                        <div class="td2-lecture-title">{{ $lecture['subject'] }}</div>
-                                        <div class="td2-lecture-sub">{{ $lecture['class'] }} | Room {{ $lecture['room'] }}
-                                        </div>
-                                        <div class="td2-lecture-time">{{ $lecture['time'] }}</div>
-                                    </article>
-                                @endforeach
+                        </div>
+                        <div class="alert alert-light border mb-3" role="alert">
+                            <div class="d-flex">
+                                <i class="fas fa-bullhorn text-warning mt-1 me-2"></i>
+                                <div><strong>Exam:</strong><br>Mid-term paper submission deadline.</div>
                             </div>
                         </div>
                     </div>
-                @else
-                    <div class="td2-lecture-empty">No lectures scheduled for today.</div>
-                @endif
-            </div>
-        </div>
-
-        <div class="td2-bottom">
-            <div class="td2-card td2-actions">
-                <div class="td2-head">
-                    <h6>Quick Actions</h6>
                 </div>
                 <div class="td2-action-grid">
                     @foreach ($teacherQuickActions as $action)
@@ -237,80 +218,3 @@
         </div>
     </div>
 @endsection
-
-@push('scripts')
-    <script>
-        (function() {
-            function loadScript(src, onLoad) {
-                const s = document.createElement('script');
-                s.src = src;
-                s.async = true;
-                s.onload = onLoad;
-                document.head.appendChild(s);
-            }
-
-            function initCharts() {
-                if (typeof Chart === 'undefined') return;
-
-                const performanceLabels = @json($performanceLabels);
-                const studyData = @json($studyData);
-                const assessmentData = @json($assessmentData);
-                const perf = document.getElementById('tdStudentPerformance');
-                if (perf) {
-                    new Chart(perf, {
-                        type: 'bar',
-                        data: {
-                            labels: performanceLabels,
-                            datasets: [{
-                                    label: 'Present',
-                                    data: studyData,
-                                    backgroundColor: '#5b6bfa',
-                                    borderRadius: 4,
-                                    categoryPercentage: 0.62,
-                                    barPercentage: 0.9
-                                },
-                                {
-                                    label: 'Absent',
-                                    data: assessmentData,
-                                    backgroundColor: '#f9b8c7',
-                                    borderRadius: 4,
-                                    categoryPercentage: 0.62,
-                                    barPercentage: 0.9
-                                }
-                            ]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            plugins: {
-                                legend: {
-                                    position: 'top',
-                                    align: 'start'
-                                },
-                                tooltip: {
-                                    enabled: true
-                                }
-                            },
-                            scales: {
-                                x: {
-                                    grid: {
-                                        display: false
-                                    }
-                                },
-                                y: {
-                                    beginAtZero: true,
-                                    grid: {
-                                        color: '#eef2f8'
-                                    }
-                                }
-                            }
-                        }
-                    });
-                }
-            }
-
-            if (typeof Chart !== 'undefined') return initCharts();
-            loadScript('https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js', initCharts);
-        })();
-    </script>
-@endpush

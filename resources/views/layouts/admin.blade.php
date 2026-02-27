@@ -16,19 +16,10 @@
     {{-- YOUR CSS (NO CHANGE) --}}
     <link rel="stylesheet" href="{{ asset('css/menu.css') }}">
     <link rel="stylesheet" href="{{ asset('css/admin.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/app-toast.css') }}">
-
-
-
     @stack('css')
 </head>
 
-<body
-    data-flash-success="{{ session('success') }}"
-    data-flash-error="{{ session('error') }}"
-    data-flash-warning="{{ session('warning') }}"
-    data-flash-info="{{ session('info') }}"
-    data-flash-duration="4000">
+<body>
 
     @include('layouts.sidebar')
 
@@ -47,23 +38,8 @@
     <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
     <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.print.min.js"></script>
 
-
-
-    <script>
-        // Global DataTable defaults for master pages
-        if (window.jQuery && $.fn.DataTable) {
-            $.extend(true, $.fn.dataTable.defaults, {
-                pageLength: 5,
-                lengthMenu: [5, 10, 25, 50],
-                pagingType: 'simple_numbers'
-            });
-        }
-
-    </script>
-
     {{-- YOUR JS --}}
     <script src="{{ asset('js/main.js') }}"></script>
-    <script src="{{ asset('js/app-toast.js') }}"></script>
     @stack('scripts')
 
 </body>

@@ -9,20 +9,11 @@ use Illuminate\Http\Request;
 
 class SectionController extends Controller
 {
-    // List all sections
+    // List all sections + show add form
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $query = Section::with('class')
-                ->whereHas('class', function($q) {
-                    $q->when(session('selected_academic_year_id'), function($sq) {
-                        $sq->where('academic_year_id', session('selected_academic_year_id'));
-                    });
-                })
-                ->when($request->filled('class_id'), function ($q) use ($request) {
-                    $q->where('class_id', (int) $request->input('class_id'));
-                })
-                ->latest();
+            $query = Section::with('class')->latest();
             return datatables()->of($query)
                 ->addIndexColumn()
                 ->addColumn('class_name', function($row){
@@ -56,25 +47,8 @@ class SectionController extends Controller
                 ->rawColumns(['status', 'action', 'class_name', 'capacity', 'DT_RowIndex'])
                 ->make(true);
         }
-        $classes = Classes::query()
-            ->when(session('selected_academic_year_id'), function ($q) {
-                $q->where('academic_year_id', session('selected_academic_year_id'));
-            })
-            ->orderBy('name')
-            ->get(); // For dropdown in add form and list filter
+        $classes = Classes::all(); // For dropdown in add form
         return view('section.index', compact('classes'));
-    }
-
-    public function create()
-    {
-        $classes = Classes::query()
-            ->when(session('selected_academic_year_id'), function ($q) {
-                $q->where('academic_year_id', session('selected_academic_year_id'));
-            })
-            ->orderBy('name')
-            ->get();
-
-        return view('section.create', compact('classes'));
     }
 
     public function show($id)

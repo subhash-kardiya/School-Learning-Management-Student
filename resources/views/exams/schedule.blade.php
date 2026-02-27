@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'Exam Subject Setup')
+@section('title', 'Exam Schedule')
 
 @section('content')
 <div class="container-fluid py-4">
