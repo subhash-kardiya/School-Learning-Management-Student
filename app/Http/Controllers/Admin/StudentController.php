@@ -16,9 +16,38 @@ use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Support\Facades\DB;
 use App\Models\ExamMark;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\ValidationException;
 
 class StudentController extends Controller
 {
+    private function assertSectionAssignable(int $classId, int $sectionId): Section
+    {
+        $section = Section::whereKey($sectionId)
+            ->where('class_id', $classId)
+            ->first();
+
+        if (!$section) {
+            throw ValidationException::withMessages([
+                'section_id' => 'Selected section does not belong to selected class.',
+            ]);
+        }
+
+        return $section;
+    }
+
+    private function assertSectionCapacity(int $sectionId, int $capacity, ?int $ignoreStudentId = null): void
+    {
+        $studentsInSection = Student::where('section_id', $sectionId)
+            ->when($ignoreStudentId, fn($q) => $q->where('id', '!=', $ignoreStudentId))
+            ->count();
+
+        if ($studentsInSection >= $capacity) {
+            throw ValidationException::withMessages([
+                'section_id' => "This section is full. Capacity is {$capacity} students.",
+            ]);
+        }
+    }
+
     private function canPermission(string $permission): bool
     {
         /** @var \App\Models\Admin|\App\Models\Teacher|\App\Models\Student|\App\Models\ParentModel|\App\Models\User|null $user */
@@ -45,7 +74,17 @@ class StudentController extends Controller
 
     public function index()
     {
-        return view('students.index');
+        $classes = Classes::with(['sections' => function ($q) {
+            $q->where('status', 1)->orderBy('name');
+        }])
+            ->where('status', 1)
+            ->when(session('selected_academic_year_id'), function ($q) {
+                $q->where('academic_year_id', session('selected_academic_year_id'));
+            })
+            ->orderBy('name')
+            ->get();
+
+        return view('students.index', compact('classes'));
     }
 
     public function create()
@@ -55,14 +94,16 @@ class StudentController extends Controller
         }
         $classes = Classes::where('status', 1)->get();
         $academicYears = AcademicYear::all();
-        $parents = ParentModel::all();
-        $roles = Role::all();
-        return view('students.create', compact('classes', 'academicYears', 'parents', 'roles'));
+        return view('students.create', compact('classes', 'academicYears'));
     }
 
     public function getStudents(Request $request)
     {
-        $students = Student::with(['class', 'section'])->latest();
+        $students = Student::with(['class', 'section'])
+            ->when(session('selected_academic_year_id'), function($q) {
+                $q->where('academic_year_id', session('selected_academic_year_id'));
+            })
+            ->latest();
 
         $role = session('role');
         $user = Auth::user();
@@ -86,6 +127,9 @@ class StudentController extends Controller
         // 🎯 Filter: Class
         if ($request->class_id) {
             $students->where('class_id', $request->class_id);
+        }
+        if ($request->section_id) {
+            $students->where('section_id', $request->section_id);
         }
 
         // 🎯 Filter: Status
@@ -145,37 +189,92 @@ class StudentController extends Controller
             abort(403, 'Unauthorized access');
         }
         $validated = $request->validate([
-            'role_id' => 'required|exists:roles,id',
-
             'student_name' => 'required|string|max:255',
             'roll_no'      => 'required|string|max:50',
             'username'     => 'required|string|max:255|unique:students,username',
             'email'        => 'required|email|max:255|unique:students,email',
             'password'     => 'required|string|min:8',
 
-            'mobile_no'    => 'nullable|string|max:20',
-            'gender'       => 'nullable|in:male,female,other',
-            'date_of_birth' => 'nullable|date',
+            'mobile_no'    => 'required|digits_between:10,15',
+            'gender'       => 'required|in:male,female,other',
+            'date_of_birth' => 'required|date|before:today',
 
-            'address'      => 'nullable|string|max:500',
-            'city'         => 'nullable|string|max:100',
-            'state'        => 'nullable|string|max:100',
-            'pincode'      => 'nullable|string|max:10',
+            'address'      => 'required|string|max:500',
+            'city'         => 'required|string|max:100',
+            'state'        => 'required|string|max:100',
+            'pincode'      => 'required|digits:6',
 
             'class_id'         => 'required|exists:classes,id',
             'section_id'       => 'required|exists:sections,id',
             'academic_year_id' => 'required|exists:academic_years,id',
-            'parent_id'        => 'nullable|exists:parents,id',
+            'parent_name'      => 'required|string|max:255',
+            'parent_username'  => 'required|string|max:255',
+            'parent_email'     => 'required|email|max:255',
+            'parent_password'  => 'nullable|string|min:8',
+            'parent_mobile_no' => 'required|digits_between:10,15',
 
-            'profile_image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+            'profile_image' => 'required|image|mimes:jpg,jpeg,png,webp|max:2048',
 
             'status' => 'required|boolean',
         ]);
 
         DB::transaction(function () use ($validated, $request) {
+            $section = $this->assertSectionAssignable((int) $validated['class_id'], (int) $validated['section_id']);
+            $this->assertSectionCapacity((int) $section->id, (int) $section->capacity);
+
+            $studentRole = Role::whereRaw('LOWER(name) = ?', ['student'])->first();
+            $parentRole = Role::whereRaw('LOWER(name) = ?', ['parent'])->first();
+            if (!$studentRole || !$parentRole) {
+                throw ValidationException::withMessages([
+                    'role' => 'Student/Parent role not found. Please seed roles first.',
+                ]);
+            }
+
+            $parentByEmail = ParentModel::where('email', $validated['parent_email'])->first();
+            $parentByUsername = ParentModel::where('username', $validated['parent_username'])->first();
+            if ($parentByEmail && $parentByUsername && $parentByEmail->id !== $parentByUsername->id) {
+                throw ValidationException::withMessages([
+                    'parent_email' => 'Parent email and username belong to different users.',
+                ]);
+            }
+
+            $parent = $parentByEmail ?: $parentByUsername;
+            if (!$parent && empty($validated['parent_password'])) {
+                throw ValidationException::withMessages([
+                    'parent_password' => 'Parent password is required for new parent.',
+                ]);
+            }
+
+            if ($parent) {
+                $parent->update([
+                    'role_id' => $parentRole->id,
+                    'parent_name' => $validated['parent_name'],
+                    'username' => $validated['parent_username'],
+                    'email' => $validated['parent_email'],
+                    'mobile_no' => $validated['parent_mobile_no'],
+                    'address' => $validated['address'],
+                    'status' => (int) $validated['status'],
+                    'password' => !empty($validated['parent_password'])
+                        ? Hash::make($validated['parent_password'])
+                        : $parent->password,
+                ]);
+            } else {
+                $parent = ParentModel::create([
+                    'role_id' => $parentRole->id,
+                    'parent_name' => $validated['parent_name'],
+                    'username' => $validated['parent_username'],
+                    'email' => $validated['parent_email'],
+                    'password' => Hash::make($validated['parent_password']),
+                    'mobile_no' => $validated['parent_mobile_no'],
+                    'address' => $validated['address'],
+                    'status' => (int) $validated['status'],
+                ]);
+            }
 
             // Password hash
             $validated['password'] = Hash::make($request->password);
+            $validated['role_id'] = $studentRole->id;
+            $validated['parent_id'] = $parent->id;
 
             // Image upload
             if ($request->hasFile('profile_image')) {
@@ -185,7 +284,15 @@ class StudentController extends Controller
                 $validated['profile_image'] = $filename;
             }
 
-            Student::create($validated);
+            $studentData = collect($validated)->except([
+                'parent_name',
+                'parent_username',
+                'parent_email',
+                'parent_password',
+                'parent_mobile_no',
+            ])->toArray();
+
+            Student::create($studentData);
         });
 
         return redirect()
@@ -247,9 +354,7 @@ class StudentController extends Controller
         $classes = Classes::where('status', 1)->get();
         $sections = Section::where('class_id', $student->class_id)->get();
         $academicYears = AcademicYear::all();
-        $parents = ParentModel::all();
-        $roles = Role::all();
-        return view('students.edit', compact('student', 'classes', 'sections', 'academicYears', 'parents', 'roles'));
+        return view('students.edit', compact('student', 'classes', 'sections', 'academicYears'));
     }
 
     public function update(Request $request, $id)
@@ -265,10 +370,23 @@ class StudentController extends Controller
             'roll_no' => 'required|string|max:50',
             'username' => 'required|string|unique:students,username,'.$id,
             'email' => 'required|email|unique:students,email,'.$id,
+            'password' => 'nullable|string|min:8',
+            'mobile_no'    => 'required|digits_between:10,15',
+            'gender'       => 'required|in:male,female,other',
+            'date_of_birth' => 'required|date|before:today',
+            'address'      => 'required|string|max:500',
+            'city'         => 'required|string|max:100',
+            'state'        => 'required|string|max:100',
+            'pincode'      => 'required|digits:6',
             'class_id' => 'required|exists:classes,id',
             'section_id' => 'required|exists:sections,id',
             'academic_year_id' => 'required|exists:academic_years,id',
-            'role_id' => 'required|exists:roles,id',
+            'parent_name'      => 'required|string|max:255',
+            'parent_username'  => 'required|string|max:255',
+            'parent_email'     => 'required|email|max:255',
+            'parent_password'  => 'nullable|string|min:8',
+            'parent_mobile_no' => 'required|digits_between:10,15',
+            'profile_image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
             'status' => 'required|boolean',
         ]);
 
@@ -291,6 +409,68 @@ class StudentController extends Controller
             $img->move(public_path('uploads/students'), $name);
             $data['profile_image'] = $name;
         }
+
+        $section = $this->assertSectionAssignable((int) $request->class_id, (int) $request->section_id);
+        $this->assertSectionCapacity((int) $section->id, (int) $section->capacity, (int) $student->id);
+
+        $studentRole = Role::whereRaw('LOWER(name) = ?', ['student'])->first();
+        $parentRole = Role::whereRaw('LOWER(name) = ?', ['parent'])->first();
+        if (!$studentRole || !$parentRole) {
+            throw ValidationException::withMessages([
+                'role' => 'Student/Parent role not found. Please seed roles first.',
+            ]);
+        }
+
+        $parentByEmail = ParentModel::where('email', $request->parent_email)->first();
+        $parentByUsername = ParentModel::where('username', $request->parent_username)->first();
+        if ($parentByEmail && $parentByUsername && $parentByEmail->id !== $parentByUsername->id) {
+            throw ValidationException::withMessages([
+                'parent_email' => 'Parent email and username belong to different users.',
+            ]);
+        }
+
+        $parent = $parentByEmail ?: $parentByUsername;
+        if (!$parent && empty($request->parent_password)) {
+            throw ValidationException::withMessages([
+                'parent_password' => 'Parent password is required for new parent.',
+            ]);
+        }
+
+        if ($parent) {
+            $parent->update([
+                'role_id' => $parentRole->id,
+                'parent_name' => $request->parent_name,
+                'username' => $request->parent_username,
+                'email' => $request->parent_email,
+                'mobile_no' => $request->parent_mobile_no,
+                'address' => $request->address,
+                'status' => (int) $request->status,
+                'password' => $request->filled('parent_password')
+                    ? Hash::make($request->parent_password)
+                    : $parent->password,
+            ]);
+        } else {
+            $parent = ParentModel::create([
+                'role_id' => $parentRole->id,
+                'parent_name' => $request->parent_name,
+                'username' => $request->parent_username,
+                'email' => $request->parent_email,
+                'password' => Hash::make($request->parent_password),
+                'mobile_no' => $request->parent_mobile_no,
+                'address' => $request->address,
+                'status' => (int) $request->status,
+            ]);
+        }
+
+        $data['role_id'] = $studentRole->id;
+        $data['parent_id'] = $parent->id;
+        unset(
+            $data['parent_name'],
+            $data['parent_username'],
+            $data['parent_email'],
+            $data['parent_password'],
+            $data['parent_mobile_no']
+        );
 
         $student->update($data);
 

@@ -3,131 +3,117 @@
 @section('title', 'Certificate')
 
 @section('content')
-    <div class="container-fluid py-4 certificate-modern">
+    <div class="container-fluid py-4 certificate-modern certificate-module-compact">
         <div class="hero-panel mb-4">
             <div>
                 <h3 class="mb-1">Certificates</h3>
                 <p class="mb-0 text-muted">Manage and print certificates</p>
             </div>
-            <div class="hero-actions">
-                <button class="btn btn-modern" data-bs-toggle="collapse" data-bs-target="#certificateCreateForm">
-                    <i class="fas fa-plus me-2"></i>Create Certificate
-                </button>
-            </div>
+
         </div>
 
         @if (session('success'))
             <div class="alert alert-success border-0 shadow-sm mb-3">{{ session('success') }}</div>
         @endif
-
-        <div class="collapse {{ $errors->any() ? 'show' : '' }}" id="certificateCreateForm">
-            <div class="card glass-card mb-4">
-                <div class="card-header">
-                    <strong>Create Certificate</strong>
-                </div>
-                <div class="card-body">
-                    <form action="{{ route('certificate.store') }}" method="POST" class="row g-3">
-                        @csrf
-                        @if ($errors->any())
-                            <div class="alert alert-danger border-0 shadow-sm">
-                                <ul class="mb-0 small">
-                                    @foreach ($errors->all() as $error)
-                                        <li>{{ $error }}</li>
-                                    @endforeach
-                                </ul>
-                            </div>
-                        @endif
-                        <div class="col-md-6">
-                            <label class="form-label">Student</label>
-                            <select name="student_id" class="form-select" required>
-                                <option value="">Select Student</option>
-                                @foreach ($students as $s)
-                                    <option value="{{ $s->id }}" {{ old('student_id') == $s->id ? 'selected' : '' }}>
-                                        {{ $s->student_name }} ({{ $s->roll_no ?? 'N/A' }})
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label">Certificate Type</label>
-                            <select name="certificate_type" class="form-select" required>
-                                <option value="bonafide" {{ old('certificate_type') == 'bonafide' ? 'selected' : '' }}>Bonafide</option>
-                                <option value="leaving" {{ old('certificate_type') == 'leaving' ? 'selected' : '' }}>Leaving</option>
-                            </select>
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label">Issue Date</label>
-                            <input type="date" name="issue_date" class="form-control"
-                                value="{{ old('issue_date', now()->toDateString()) }}" required>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Academic Year</label>
-                            <select name="academic_year_id" class="form-select">
-                                <option value="">Select Year</option>
-                                @foreach ($academicYears as $year)
-                                    <option value="{{ $year->id }}">{{ $year->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="col-md-8">
-                            <label class="form-label">Reason (Leaving only)</label>
-                            <input type="text" name="reason" class="form-control" value="{{ old('reason') }}">
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Conduct</label>
-                            <input type="text" name="conduct" class="form-control" value="{{ old('conduct') }}">
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Remarks</label>
-                            <input type="text" name="remarks" class="form-control" value="{{ old('remarks') }}">
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Status</label>
-                            <select name="status" class="form-select" required>
-                                <option value="draft">Draft</option>
-                                <option value="issued">Issued</option>
-                            </select>
-                        </div>
-                        <div class="col-12 text-end">
-                            <button type="submit" class="btn btn-modern px-4">Generate Certificate</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
+        @if (session('error'))
+            <div class="alert alert-danger border-0 shadow-sm mb-3">{{ session('error') }}</div>
+        @endif
 
         <div class="card glass-card">
             <div class="card-header">
-                <strong>Generated Certificates</strong>
+                <strong>Certificate Requests</strong>
+            </div>
+            <div class="px-3 py-2 border-bottom">
+                <div class="d-flex justify-content-end align-items-center gap-2 flex-nowrap"
+                    style="overflow-x:auto; white-space:nowrap;">
+                    <span class="text-muted small mb-0">Filter Status</span>
+                    <select id="certificateFilterStatus" class="form-select form-select-sm"
+                        style="min-width: 150px; width:150px;">
+                        <option value="pending" {{ ($statusFilter ?? 'pending') === 'pending' ? 'selected' : '' }}>Pending
+                        </option>
+                        <option value="approved" {{ ($statusFilter ?? '') === 'approved' ? 'selected' : '' }}>Approved
+                        </option>
+                        <option value="rejected" {{ ($statusFilter ?? '') === 'rejected' ? 'selected' : '' }}>Rejected
+                        </option>
+                        <option value="" {{ ($statusFilter ?? '') === '' ? 'selected' : '' }}>All</option>
+                    </select>
+                    <span class="text-muted small mb-0">Filter Class</span>
+                    <select id="certificateFilterClass" class="form-select form-select-sm"
+                        style="min-width: 170px; width:170px;">
+                        <option value="">All Classes</option>
+                        @foreach ($classes as $class)
+                            <option value="{{ $class->id }}">{{ $class->name }}</option>
+                        @endforeach
+                    </select>
+                    <select id="certificateFilterSection" class="form-select form-select-sm"
+                        style="min-width: 170px; width:170px;">
+                        <option value="">All Sections</option>
+                    </select>
+                </div>
             </div>
             <div class="card-body p-0">
                 <div class="table-responsive">
-                    <table class="table table-modern align-middle mb-0">
+                    <table class="table table-modern align-middle mb-0 certificate-request-table" id="certificateTable">
                         <thead>
                             <tr>
-                                <th>Certificate No</th>
+                                <th>Request ID</th>
+
                                 <th>Student</th>
-                                <th>Type</th>
+                                <th>Certificate</th>
                                 <th>Status</th>
-                                <th>Issue Date</th>
+                                <th>Requested On</th>
+
                                 <th class="text-end">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             @forelse ($certificates as $c)
-                                <tr>
-                                    <td>{{ $c->certificate_no }}</td>
-                                    <td>{{ $c->student?->student_name }}</td>
-                                    <td>{{ ucfirst($c->certificate_type) }}</td>
+                                <tr data-class-id="{{ $c->student?->class_id }}"
+                                    data-section-id="{{ $c->student?->section_id }}">
+                                    <td>{{ $c->id }}</td>
+
                                     <td>
-                                        <span class="badge {{ $c->status === 'issued' ? 'bg-success' : 'bg-secondary' }}">
+                                        <div class="fw-semibold">{{ $c->student?->student_name ?? 'N/A' }}</div>
+                                        <div class="small text-muted">
+                                            Roll: {{ $c->student?->roll_no ?? 'N/A' }}
+                                            | Class: {{ $c->student?->class?->name ?? 'N/A' }}
+                                            | Sec: {{ $c->student?->section?->name ?? 'N/A' }}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="fw-semibold">{{ ucfirst($c->certificate_type) }}</div>
+                                        @if (!empty($c->reason))
+                                            <div class="small text-muted">Reason: {{ $c->reason }}</div>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        <span
+                                            class="badge
+                                            {{ $c->status === 'approved' ? 'bg-success' : '' }}
+                                            {{ $c->status === 'pending' ? 'bg-warning text-dark' : '' }}
+                                            {{ $c->status === 'rejected' ? 'bg-danger' : '' }}">
                                             {{ ucfirst($c->status) }}
                                         </span>
                                     </td>
-                                    <td>{{ $c->issue_date }}</td>
+                                    <td>{{ optional($c->created_at)->format('d-m-Y') ?? '-' }}</td>
+
                                     <td class="text-end">
-                                        <a href="{{ route('certificate.show', $c->id) }}" class="btn btn-sm btn-soft">View</a>
-                                        <a href="{{ route('certificate.show', $c->id) }}?print=1" class="btn btn-sm btn-modern" target="_blank">Print</a>
+                                        <div class="d-inline-flex gap-1 flex-wrap justify-content-end">
+                                            <a href="{{ route('certificate.show', $c->id) }}"
+                                                class="btn btn-sm btn-soft">View</a>
+                                            @if (($canApprove ?? false) && $c->status === 'pending')
+                                                <form action="{{ route('certificate.approve', $c->id) }}" method="POST"
+                                                    class="d-inline">
+                                                    @csrf
+                                                    <button type="submit" class="btn btn-sm btn-success">Approve</button>
+                                                </form>
+                                                <form action="{{ route('certificate.reject', $c->id) }}" method="POST"
+                                                    class="d-inline">
+                                                    @csrf
+                                                    <button type="submit" class="btn btn-sm btn-danger">Reject</button>
+                                                </form>
+                                            @endif
+                                        </div>
                                     </td>
                                 </tr>
                             @empty
@@ -146,4 +132,71 @@
 
 @push('css')
     <link rel="stylesheet" href="{{ asset('css/certificate.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/resize/certificate-compact.css') }}">
+@endpush
+
+@push('scripts')
+    <script>
+        (function() {
+            $('#certificateFilterStatus').on('change', function() {
+                const url = new URL(window.location.href);
+                const value = this.value || '';
+                if (value) {
+                    url.searchParams.set('status', value);
+                } else {
+                    url.searchParams.delete('status');
+                }
+                window.location.href = url.toString();
+            });
+
+            const classSections = @json(
+                $classes->mapWithKeys(function ($class) {
+                    return [
+                        $class->id => $class->sections->map(function ($section) {
+                                return ['id' => $section->id, 'name' => $section->name];
+                            })->values(),
+                    ];
+                }));
+
+            function renderSectionFilter(classId) {
+                const $section = $('#certificateFilterSection');
+                const selected = $section.val();
+                $section.empty().append('<option value="">All Sections</option>');
+                if (!classId || !classSections[classId]) return;
+
+                classSections[classId].forEach(function(item) {
+                    $section.append(`<option value="${item.id}">${item.name}</option>`);
+                });
+
+                if (selected && $section.find(`option[value="${selected}"]`).length) {
+                    $section.val(selected);
+                }
+            }
+
+            function applyCertificateFilters() {
+                const classId = String($('#certificateFilterClass').val() || '');
+                const sectionId = String($('#certificateFilterSection').val() || '');
+
+                $('#certificateTable tbody tr').each(function() {
+                    const $row = $(this);
+                    const rowClass = String($row.data('class-id') || '');
+                    const rowSection = String($row.data('section-id') || '');
+
+                    const classMatch = !classId || rowClass === classId;
+                    const sectionMatch = !sectionId || rowSection === sectionId;
+                    $row.toggle(classMatch && sectionMatch);
+                });
+            }
+
+            $('#certificateFilterClass').on('change', function() {
+                renderSectionFilter(this.value);
+                $('#certificateFilterSection').val('');
+                applyCertificateFilters();
+            });
+            $('#certificateFilterSection').on('change', function() {
+                applyCertificateFilters();
+            });
+
+        })();
+    </script>
 @endpush

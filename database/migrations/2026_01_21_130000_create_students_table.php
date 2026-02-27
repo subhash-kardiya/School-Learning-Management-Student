@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('students', function (Blueprint $table) {
             $table->id();
             $table->foreignId('role_id')->constrained('roles')->cascadeOnDelete();
+            $table->unsignedBigInteger('school_id')->nullable();
             $table->string('student_name');
             $table->string('roll_no')->nullable();
             $table->string('username')->unique();

@@ -19,13 +19,7 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->string('password');
             $table->string('mobile_no')->nullable();
-            $table->enum('gender', ['male', 'female', 'other'])->nullable();
-            $table->date('date_of_birth')->nullable();
             $table->text('address')->nullable();
-            $table->string('city')->nullable();
-            $table->string('state')->nullable();
-            $table->string('pincode')->nullable();
-            $table->string('profile_image')->nullable(); // <-- remove "after()"
             $table->boolean('status')->default(1);
             $table->timestamps();
         });

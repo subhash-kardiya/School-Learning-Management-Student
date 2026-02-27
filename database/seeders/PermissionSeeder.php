@@ -35,6 +35,7 @@ class PermissionSeeder extends Seeder
             // Master Data
             ['slug' => 'academic_year_manage', 'name' => 'Manage Academic Years', 'created_at' => $now, 'updated_at' => $now],
             ['slug' => 'class_manage', 'name' => 'Manage Classes', 'created_at' => $now, 'updated_at' => $now],
+            ['slug' => 'room_manage', 'name' => 'Manage Room Master', 'created_at' => $now, 'updated_at' => $now],
             ['slug' => 'section_manage', 'name' => 'Manage Sections', 'created_at' => $now, 'updated_at' => $now],
             ['slug' => 'subject_manage', 'name' => 'Manage Subjects', 'created_at' => $now, 'updated_at' => $now],
             ['slug' => 'role_view', 'name' => 'View Roles', 'created_at' => $now, 'updated_at' => $now],
@@ -90,6 +91,8 @@ class PermissionSeeder extends Seeder
             $admin->permissions()->sync(
                 Permission::whereNotIn('slug', [
                     'timetable_delete',
+                    'exam_type',
+                    'marks_entry',
                 ])->pluck('id')
             );
         }
@@ -97,8 +100,6 @@ class PermissionSeeder extends Seeder
         if ($teacher) {
             $teacher->permissions()->sync(
                 Permission::whereIn('slug', [
-                    'student_view',
-                    'teacher_view',
                     'timetable_teacher_view',
                     'timetable.view_own',
                     'attendance_mark',
@@ -106,6 +107,7 @@ class PermissionSeeder extends Seeder
                     'homework_create',
                     'homework_list',
                     'homework_submission',
+                    'exam_type',
                     'exam_schedule',
                     'marks_entry',
                     'notice_view',
@@ -117,12 +119,12 @@ class PermissionSeeder extends Seeder
         if ($student) {
             $student->permissions()->sync(
                 Permission::whereIn('slug', [
-                    'student_view',
                     'timetable_student_view',
                     'timetable.view_class',
                     'attendance_view',
                     'homework_list',
                     'notice_view',
+                    'exam_schedule',
                     'result_view',
                 ])->pluck('id')
             );
@@ -131,12 +133,12 @@ class PermissionSeeder extends Seeder
         if ($parent) {
             $parent->permissions()->sync(
                 Permission::whereIn('slug', [
-                    'student_view',
                     'timetable_student_view',
                     'timetable.view_child',
                     'attendance_view',
                     'homework_list',
                     'notice_view',
+                    'exam_schedule',
                     'result_view',
                 ])->pluck('id')
             );

@@ -11,14 +11,15 @@ return new class extends Migration
         Schema::create('certificates', function (Blueprint $table) {
             $table->id();
             $table->foreignId('student_id')->constrained('students')->onDelete('cascade');
-            $table->string('certificate_no')->unique();
+            $table->string('certificate_no')->nullable()->unique();
             $table->enum('certificate_type', ['bonafide', 'leaving']);
+            $table->foreignId('class_id')->nullable()->constrained('classes')->nullOnDelete();
             $table->foreignId('academic_year_id')->nullable()->constrained('academic_years')->onDelete('set null');
-            $table->date('issue_date');
+            $table->date('issue_date')->nullable();
             $table->string('reason')->nullable();
-            $table->string('conduct')->nullable();
-            $table->string('remarks', 500)->nullable();
-            $table->enum('status', ['draft', 'issued'])->default('draft');
+            $table->enum('status', ['pending', 'approved', 'rejected'])->default('pending');
+            $table->unsignedBigInteger('approved_by')->nullable();
+            $table->unsignedBigInteger('created_by')->nullable();
             $table->timestamps();
         });
     }

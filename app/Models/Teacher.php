@@ -2,14 +2,16 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use App\Traits\HasPermissions;
 
 class Teacher extends Authenticatable
 {
-    use HasPermissions;
+    use HasFactory, HasPermissions;
     protected $fillable = [
-        'role_id','name','username','email','password','mobile_no',
+        'name','username','email','password','mobile_no',
+        'school_id',
         'gender','date_of_birth','address','city','state','pincode',
         'qualification','exp','join_date','profile_image','status'
     ];
@@ -18,6 +20,8 @@ class Teacher extends Authenticatable
 
     public function subjects()
     {
-        return $this->hasMany(Subject::class, 'teacher_id');
+        return $this->belongsToMany(Subject::class, 'teacher_mappings', 'teacher_id', 'subject_id')
+            ->withPivot(['section_id', 'room_id'])
+            ->withTimestamps();
     }
 }

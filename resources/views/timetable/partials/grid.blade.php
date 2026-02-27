@@ -15,7 +15,7 @@
 @endphp
 
 @push('css')
-    <link rel="stylesheet" href="{{ asset('css/timetable.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/resize/timetable-compact.css') }}">
 @endpush
 
 <div class="tt-print-area">
@@ -63,20 +63,10 @@
                     @endforeach
                 </select>
             @endif
-            @if (!empty($filters['academicYears']) && ($config['showAcademicYear'] ?? false))
-                <select class="form-select" name="academic_year_id" form="tt-filters">
-                    <option value="">Academic Year</option>
-                    @foreach ($filters['academicYears'] as $year)
-                        <option value="{{ $year->id }}">{{ $year->name }}</option>
-                    @endforeach
-                </select>
+            @if (!empty(session('selected_academic_year_id')))
+                <input type="hidden" name="academic_year_id" value="{{ session('selected_academic_year_id') }}" form="tt-filters">
             @endif
-            @if (($config['showClass'] ?? false) || ($config['showSection'] ?? false) || ($config['showTeacher'] ?? false) || ($config['showStudent'] ?? false))
-                <button type="button" class="btn btn-primary-fancy" id="tt-find">Find</button>
-            @endif
-            @if (($config['showClass'] ?? false) || ($config['showSection'] ?? false) || ($config['showTeacher'] ?? false) || ($config['showStudent'] ?? false))
-                <button type="button" class="btn btn-primary-fancy" id="tt-reset">Reset Filters</button>
-            @endif
+
             @if (!empty($config['addPanelId']))
                 <button type="button" class="btn btn-primary-fancy" id="tt-add-entry-btn" data-bs-toggle="modal" data-bs-target="#{{ $config['addPanelId'] }}">
                     <i class="fa fa-plus me-1"></i> Add Entry
@@ -157,6 +147,8 @@
                 || (form ? form.querySelector(`[name="${name}"]`) : null);
             const classSelect = getFilterEl('class_id');
             const sectionSelect = getFilterEl('section_id');
+            const teacherSelect = getFilterEl('teacher_id');
+            const studentSelect = getFilterEl('student_id');
             const yearSelect = getFilterEl('academic_year_id');
             const addBtn = document.getElementById('tt-add-entry-btn');
             const sectionOptions = sectionSelect
@@ -610,28 +602,41 @@
                 form.addEventListener('change', () => {
                     filterSectionsByClass();
                     saveFilters();
+                    load();
                 });
             }
             if (classSelect) {
                 classSelect.addEventListener('change', () => {
                     filterSectionsByClass();
                     saveFilters();
+                    load();
                 });
             }
             if (sectionSelect) {
-                sectionSelect.addEventListener('change', saveFilters);
+                sectionSelect.addEventListener('change', () => {
+                    saveFilters();
+                    load();
+                });
+            }
+            if (teacherSelect) {
+                teacherSelect.addEventListener('change', () => {
+                    saveFilters();
+                    load();
+                });
+            }
+            if (studentSelect) {
+                studentSelect.addEventListener('change', () => {
+                    saveFilters();
+                    load();
+                });
+            }
+            if (yearSelect) {
+                yearSelect.addEventListener('change', () => {
+                    saveFilters();
+                    load();
+                });
             }
             if (printBtn) printBtn.addEventListener('click', () => window.print());
-            if (findBtn) findBtn.addEventListener('click', () => {
-                saveFilters();
-                load();
-            });
-            if (resetBtn) resetBtn.addEventListener('click', () => {
-                if (!form) return;
-                form.reset();
-                localStorage.removeItem(storageKey);
-                load();
-            });
             if (addBtn) {
                 addBtn.addEventListener('click', () => {
                     openForm({

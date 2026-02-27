@@ -5,7 +5,6 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\TeacherController;
 use App\Http\Controllers\Admin\StudentController;
-use App\Http\Controllers\Admin\ParentController;
 use App\Http\Controllers\Teacher\DashboardController as TeacherDashboardController;
 use App\Http\Controllers\Student\DashboardController as StudentDashboardController;
 use App\Http\Controllers\Parent\DashboardController as ParentDashboardController;
@@ -15,13 +14,15 @@ use App\Http\Controllers\Admin\TeacherMappingController;
 use App\Http\Controllers\Admin\ClassController;
 use App\Http\Controllers\Admin\SubjectController;
 use App\Http\Controllers\Admin\RoleController;
+use App\Http\Controllers\Admin\RoomController;
 use App\Http\Controllers\Admin\TimetableController;
 use App\Http\Controllers\Admin\HomeworkController;
 use App\Http\Controllers\Admin\AttendanceController;
 use App\Http\Controllers\Admin\CertificateController;
+use App\Http\Controllers\Admin\SettingsController;
+use App\Http\Controllers\Admin\ExamController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin\ExamTypeController;
-use App\Http\Controllers\Admin\ExamController;
 use App\Http\Controllers\Admin\ExamMarkController;
 use App\Http\Controllers\Admin\ResultController as AdminResultController;
 use App\Http\Controllers\Teacher\ResultController as TeacherResultController;
@@ -35,19 +36,19 @@ use App\Http\Controllers\Parent\ResultController as ParentResultController;
 
 Route::middleware(['guest.custom'])->group(function () {
     // Login
-    Route::get('/login', fn() => view('auth.login'))->name('auth.login');
+    Route::get('/login', [LoginController::class, 'showLogin'])->name('auth.login');
     Route::post('/login', [LoginController::class, 'login'])->name('login.post');
 
     // Forgot Password
-    Route::get('/forgot-password', fn() => view('auth.forgot-password'))->name('forgot.password');
+    Route::get('/forgot-password', [LoginController::class, 'showForgotPassword'])->name('forgot.password');
     Route::post('/forgot-password', [LoginController::class, 'forgotPassword'])->name('forgot.password.post');
 
     // OTP Verification
-    Route::get('/verify-otp', fn() => view('auth.otp'))->name('otp.page');
+    Route::get('/verify-otp', [LoginController::class, 'showOtp'])->name('otp.page');
     Route::post('/verify-otp', [LoginController::class, 'verifyOtp'])->name('verify.otp');
 
     // Change Password
-    Route::get('/change-password', fn() => view('auth.change-password'))->name('change.password');
+    Route::get('/change-password', [LoginController::class, 'showChangePasswordForm'])->name('change.password');
     Route::post('/change-password', [LoginController::class, 'changePassword'])->name('change.password.post');
 });
 
@@ -60,12 +61,15 @@ Route::middleware(['auth.session'])->prefix('admin')->group(function () {
 
     // Dashboard
     Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
+    Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
 
 // Academic Year CRUD (uses resource routes)
     Route::middleware(['permission:academic_year_manage'])->group(function () {
         Route::get('/academic-year', [AcademicYearController::class, 'index'])->name('academic.year.index');
+        Route::get('/academic-year/create', [AcademicYearController::class, 'create'])->name('academic.year.create');
         Route::post('/academic-year/store', [AcademicYearController::class, 'store'])->name('academic.year.store');
         Route::get('/academic-year/active/{id}', [AcademicYearController::class, 'setActive'])->name('academic.year.active');
+        Route::get('/academic-year/inactive/{id}', [AcademicYearController::class, 'setInactive'])->name('academic.year.inactive');
         Route::get('/academic-year/lock/{id}', [AcademicYearController::class, 'lock'])->name('academic.year.lock');
         Route::get('/academic-year/unlock/{id}', [AcademicYearController::class, 'unlock'])->name('academic.year.unlock');
         Route::get('/academic-year/{id}/edit', [AcademicYearController::class, 'edit'])->name('academic.year.edit');
@@ -82,6 +86,7 @@ Route::middleware(['auth.session'])->prefix('admin')->group(function () {
         Route::get('/classes/{id}/edit', [ClassController::class, 'edit'])->name('classes.edit');
         Route::put('/classes/{id}', [ClassController::class, 'update'])->name('classes.update');
         Route::delete('/classes/{id}', [ClassController::class, 'destroy'])->name('classes.destroy');
+
     });
 
 
@@ -89,6 +94,7 @@ Route::middleware(['auth.session'])->prefix('admin')->group(function () {
     // Sections
     Route::middleware(['permission:section_manage'])->group(function () {
         Route::get('/section', [SectionController::class, 'index'])->name('section.index');
+        Route::get('/section/create', [SectionController::class, 'create'])->name('section.create');
         Route::post('/section/store', [SectionController::class, 'store'])->name('section.store');
         Route::delete('/section/{id}', [SectionController::class, 'destroy'])->name('section.destroy');
         Route::get('/section/{id}', [SectionController::class, 'show'])->name('section.show');
@@ -150,21 +156,10 @@ Route::middleware(['auth.session'])->prefix('admin')->group(function () {
             ->name('students.destroy');
     });
 
-    // Parents
-    Route::middleware(['permission:parent_manage'])->group(function () {
-        Route::get('/parents', [ParentController::class, 'index'])->name('parents.index');
-        Route::get('/parents/data', [ParentController::class, 'getParents'])->name('parents.data');
-        Route::get('/parents/create', [ParentController::class, 'create'])->name('parents.create');
-        Route::post('/parents/store', [ParentController::class, 'store'])->name('parents.store');
-        Route::get('/parents/{id}', [ParentController::class, 'show'])->name('parents.show');
-        Route::get('/parents/{id}/edit', [ParentController::class, 'edit'])->name('parents.edit');
-        Route::put('/parents/{id}', [ParentController::class, 'update'])->name('parents.update');
-        Route::delete('/parents/{id}', [ParentController::class, 'destroy'])->name('parents.destroy');
-    });
-
     // Subjects
     Route::middleware(['permission:subject_manage'])->group(function () {
         Route::get('/subjects', [SubjectController::class, 'index'])->name('subjects.index');
+        Route::get('/subjects/create', [SubjectController::class, 'create'])->name('subjects.create');
         Route::post('/subjects/store', [SubjectController::class, 'store'])->name('subjects.store');
         Route::get('/subjects/{id}', [SubjectController::class, 'show'])->name('subjects.show');
         Route::get('/subjects/{id}/edit', [SubjectController::class, 'edit'])->name('subjects.edit');
@@ -172,13 +167,23 @@ Route::middleware(['auth.session'])->prefix('admin')->group(function () {
         Route::delete('/subjects/{id}', [SubjectController::class, 'destroy'])->name('subjects.destroy');
     });
 
-// Teacher Mapping
-    Route::middleware(['permission:class_manage'])->group(function () {
+    // Teacher Mapping
+    Route::middleware(['permission:class_manage,room_manage'])->group(function () {
         Route::get('/teacher-mapping', [TeacherMappingController::class, 'index'])->name('teacher.mapping');
-        // Safety: redirect any accidental GET hits to the store URL back to the index
-        Route::get('/teacher-mapping/store', fn() => redirect()->route('teacher.mapping'));
+        Route::get('/teacher-mapping/create', [TeacherMappingController::class, 'create'])->name('teacher.mapping.create');
         Route::post('/teacher-mapping/store', [TeacherMappingController::class, 'store'])->name('teacher.mapping.store');
+        Route::get('/teacher-mapping/{id}/edit', [TeacherMappingController::class, 'edit'])->name('teacher.mapping.edit');
+        Route::put('/teacher-mapping/{id}', [TeacherMappingController::class, 'update'])->name('teacher.mapping.update');
         Route::delete('/teacher-mapping/{id}', [TeacherMappingController::class, 'destroy'])->name('teacher.mapping.destroy');
+    });
+
+    Route::middleware(['permission:room_manage'])->group(function () {
+        Route::get('/rooms', [RoomController::class, 'index'])->name('rooms.index');
+        Route::get('/rooms/create', [RoomController::class, 'create'])->name('rooms.create');
+        Route::post('/rooms', [RoomController::class, 'store'])->name('rooms.store');
+        Route::get('/rooms/{id}/edit', [RoomController::class, 'edit'])->name('rooms.edit');
+        Route::put('/rooms/{id}', [RoomController::class, 'update'])->name('rooms.update');
+        Route::delete('/rooms/{id}', [RoomController::class, 'destroy'])->name('rooms.destroy');
     });
 
 
@@ -190,11 +195,14 @@ Route::middleware(['auth.session'])->prefix('admin')->group(function () {
         Route::get('/roles', [RoleController::class, 'index'])->name('roles.index');
     });
     Route::middleware(['permission:role_add'])->group(function () {
+        Route::get('/roles/create', [RoleController::class, 'create'])->name('roles.create');
         Route::post('/roles', [RoleController::class, 'store'])->name('roles.store');
     });
     Route::middleware(['permission:role_edit'])->group(function () {
         Route::get('/roles/{role}/edit', [RoleController::class, 'edit'])->name('roles.edit');
         Route::put('/roles/{role}', [RoleController::class, 'update'])->name('roles.update');
+        // Fallback for environments where method spoofing may not be honored.
+        Route::post('/roles/{role}', [RoleController::class, 'update'])->name('roles.update.post');
     });
     Route::middleware(['permission:role_delete'])->group(function () {
         Route::delete('/roles/{role}', [RoleController::class, 'destroy'])->name('roles.destroy');
@@ -222,16 +230,23 @@ Route::middleware(['auth.session'])->prefix('admin')->group(function () {
     Route::middleware(['role:admin|superadmin', 'permission:timetable.manage_all'])->group(function () {
         Route::delete('/timetable/{id}', [TimetableController::class, 'destroy'])->name('timetable.destroy');
     });
-    Route::middleware(['role:admin|superadmin|teacher', 'permission:timetable.view_own'])->group(function () {
+    Route::middleware(['role:admin|superadmin', 'permission:timetable.view_own'])->group(function () {
         Route::get('/timetable/teacher', [TimetableController::class, 'teacherIndex'])->name('timetable.teacher');
         Route::get('/timetable/teacher/data', [TimetableController::class, 'teacherData'])->name('timetable.teacher.data');
     });
 
-    Route::get('/homework/create', [HomeworkController::class, 'create'])->name('homework.create');
-    Route::post('/homework/create', [HomeworkController::class, 'store'])->name('homework.store');
-    Route::get('/homework/list', [HomeworkController::class, 'list'])->name('homework.list');
-    Route::get('/homework/submission', [HomeworkController::class, 'submissions'])->name('homework.submission');
-    Route::post('/homework/submission/{id}/feedback', [HomeworkController::class, 'feedback'])->name('homework.submission.feedback');
+    Route::middleware(['permission:homework_create'])->group(function () {
+        Route::get('/homework/create', [HomeworkController::class, 'create'])->name('homework.create');
+        Route::post('/homework/create', [HomeworkController::class, 'store'])->name('homework.store');
+    });
+    Route::middleware(['permission:homework_list'])->group(function () {
+        Route::post('/homework/{id}/toggle-status', [HomeworkController::class, 'toggleStatus'])->name('homework.toggle.status');
+        Route::delete('/homework/{id}', [HomeworkController::class, 'destroy'])->name('homework.destroy');
+        Route::get('/homework/list', [HomeworkController::class, 'list'])->name('homework.list');
+    });
+    Route::middleware(['permission:homework_submission'])->group(function () {
+        Route::get('/homework/{id}/submission-report', [HomeworkController::class, 'submissionReport'])->name('homework.submission.report');
+    });
 
     Route::get('/exams/data', [ExamController::class, 'index'])->name('exams.data');
     Route::get('/exams/create', [ExamController::class, 'create'])->name('exams.createexam');
@@ -260,17 +275,37 @@ Route::middleware(['auth.session'])->prefix('admin')->group(function () {
     Route::get('/results', [AdminResultController::class, 'index'])->name('results.index');
     Route::get('/results/{student}/{exam}/view', [AdminResultController::class, 'show'])->name('results.view');
 
-    Route::get('/communication/announcements', fn() => view('communication.announcements'))->name('communication.announcements');
+    Route::middleware(['permission:notice_view,notice_manage'])->group(function () {
+        Route::get('/communication/announcements', [AnnouncementController::class, 'index'])->name('communication.announcements');
+        Route::get('/communication/announcements/create', [AnnouncementController::class, 'create'])->name('communication.announcements.create');
+        Route::get('/communication/announcements/{announcement}/edit', [AnnouncementController::class, 'edit'])->name('communication.announcements.edit');
+        Route::post('/communication/announcements', [AnnouncementController::class, 'store'])->name('communication.announcements.store');
+        Route::put('/communication/announcements/{announcement}', [AnnouncementController::class, 'update'])->name('communication.announcements.update');
+        Route::delete('/communication/announcements/{announcement}', [AnnouncementController::class, 'destroy'])->name('communication.announcements.destroy');
+    });
 
     Route::get('/certificate', [CertificateController::class, 'index'])->name('certificate.index');
-    Route::post('/certificate', [CertificateController::class, 'store'])->name('certificate.store');
+    Route::post('/certificate/{id}/approve', [CertificateController::class, 'approve'])->name('certificate.approve');
+    Route::post('/certificate/{id}/reject', [CertificateController::class, 'reject'])->name('certificate.reject');
+    Route::get('/certificate/{id}/download', [CertificateController::class, 'download'])->name('certificate.download');
     Route::get('/certificate/{id}', [CertificateController::class, 'show'])->name('certificate.show');
 
     // Attendance
     Route::get('/attendance/mark', [AttendanceController::class, 'markForm'])->name('attendance.mark');
     Route::post('/attendance/mark', [AttendanceController::class, 'markSave'])->name('attendance.mark.save');
+    Route::get('/attendance/grid', [AttendanceController::class, 'grid'])->name('attendance.grid');
+    Route::post('/attendance/update-cell', [AttendanceController::class, 'updateCell'])->name('attendance.update.cell');
     Route::get('/attendance', [AttendanceController::class, 'index'])->name('attendance.index');
+    Route::get('/attendance/report-grid', [AttendanceController::class, 'reportGrid'])->name('attendance.report.grid');
     Route::post('/attendance/update', [AttendanceController::class, 'update'])->name('attendance.update');
+});
+
+Route::middleware(['auth.session'])->group(function () {
+    Route::post('/context-filters', [ContextFilterController::class, 'set'])->name('context.filters.set');
+    Route::post('/context-filters/clear', [ContextFilterController::class, 'clear'])->name('context.filters.clear');
+    Route::get('/classes/by-year/{yearId}', [ContextFilterController::class, 'classesByYear'])->name('classes.by.year');
+    Route::get('/sections/by-class/{classId}', [ContextFilterController::class, 'sectionsByClass'])->name('sections.by.class');
+    Route::get('/teachers/by-subject/{subjectId}', [ContextFilterController::class, 'teacherBySubject'])->name('teachers.by.subject');
 });
 
 // =====================
@@ -291,10 +326,15 @@ Route::middleware(['role:student'])->prefix('student')->group(function () {
         Route::get('/timetable', [TimetableController::class, 'studentIndex'])->name('student.timetable');
         Route::get('/timetable/data', [TimetableController::class, 'studentData'])->name('student.timetable.data');
     });
-    Route::get('/homework', [HomeworkController::class, 'studentList'])->name('student.homework.list');
-    Route::post('/homework/{homework}/submit', [HomeworkController::class, 'submit'])->name('student.homework.submit');
+    Route::middleware(['permission:homework_list'])->group(function () {
+        Route::get('/homework', [HomeworkController::class, 'studentList'])->name('student.homework.list');
+        Route::post('/homework/{homework}/submit', [HomeworkController::class, 'submit'])->name('student.homework.submit');
+    });
     Route::get('/attendance', [AttendanceController::class, 'studentView'])->name('student.attendance');
+    Route::get('/attendance/grid', [AttendanceController::class, 'studentGrid'])->name('student.attendance.grid');
     Route::get('/certificates', [CertificateController::class, 'studentIndex'])->name('student.certificate.index');
+    Route::get('/certificates/request', [CertificateController::class, 'studentCreate'])->name('student.certificate.create');
+    Route::post('/certificates/request', [CertificateController::class, 'studentStore'])->name('student.certificate.store');
     Route::get('/certificates/{id}', [CertificateController::class, 'studentShow'])->name('student.certificate.show');
     Route::get('/results', [StudentController::class, 'results'])->name('student.results');
 });

@@ -3,14 +3,14 @@
 @section('title', 'Class Mapping')
 
 @section('content')
-    <div class="container-fluid py-4">
+    <div class="container-fluid py-4 class-mapping-compact">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
                 <p class="text-muted small mb-0">Map teachers to class sections for easy scheduling</p>
             </div>
-            <button type="button" class="btn btn-primary-fancy" data-bs-toggle="collapse" data-bs-target="#mappingForm">
+            <a href="{{ route('teacher.mapping.create') }}" class="btn btn-primary-fancy">
                 <i class="fa fa-plus me-2"></i> New Mapping
-            </button>
+            </a>
         </div>
 
         @if (session('success'))
@@ -20,80 +20,20 @@
             <div class="alert alert-danger border-0 shadow-sm mb-4">{{ session('error') }}</div>
         @endif
 
-        <div class="collapse {{ $errors->any() ? 'show' : '' }} mb-4" id="mappingForm">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="card-title">Create Teacher Mapping</h5>
-                </div>
-                <div class="card-body p-4">
-                    <form action="{{ route('teacher.mapping.store') }}" method="POST">
-                        @csrf
-                        @if ($errors->any())
-                            <div class="alert alert-danger border-0 shadow-sm mb-4">
-                                <ul class="mb-0 small">
-                                    @foreach ($errors->all() as $error)
-                                        <li>{{ $error }}</li>
-                                    @endforeach
-                                </ul>
-                            </div>
-                        @endif
-
-                        <div class="row g-4 mb-4">
-                            <div class="col-md-6">
-                                <label for="teacher_id" class="form-label">Teacher</label>
-                                <select name="teacher_id" id="teacher_id" class="form-select" required>
-                                    <option value="">Select Teacher</option>
-                                    @foreach ($teachers as $teacher)
-                                        <option value="{{ $teacher->id }}"
-                                            {{ old('teacher_id') == $teacher->id ? 'selected' : '' }}>
-                                            {{ $teacher->name }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="col-md-6">
-                                <label for="section_id" class="form-label">Section</label>
-                                <select name="section_id" id="section_id" class="form-select" required>
-                                    <option value="">Select Section</option>
-                                    @foreach ($classes as $class)
-                                        @if ($class->sections && $class->sections->count())
-                                            <optgroup label="{{ $class->name }}">
-                                                @foreach ($class->sections as $section)
-                                                    <option value="{{ $section->id }}"
-                                                        {{ old('section_id') == $section->id ? 'selected' : '' }}>
-                                                        {{ $section->name }}
-                                                    </option>
-                                                @endforeach
-                                            </optgroup>
-                                        @endif
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="col-md-6">
-                                <label for="subject_id" class="form-label">Subject</label>
-                                <select name="subject_id" id="subject_id" class="form-select" required>
-                                    <option value="">Select Subject</option>
-                                    @foreach ($subjects as $subject)
-                                        <option value="{{ $subject->id }}"
-                                            {{ old('subject_id') == $subject->id ? 'selected' : '' }}>
-                                            {{ $subject->name }} ({{ $subject->subject_code }})
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-                        </div>
-
-                        <div class="d-flex justify-content-end">
-                            <button type="submit" class="btn btn-primary-fancy px-5">Save Mapping</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-
         <div class="card">
             <div class="card-header">
                 <h5 class="card-title">Existing Mappings</h5>
+            </div>
+            <div class="d-none" id="mapping-filter-holder">
+                <select id="filter-class-id" class="form-select form-select-sm" style="min-width: 180px;">
+                    <option value="">All Classes</option>
+                    @foreach ($classes as $class)
+                        <option value="{{ $class->id }}">{{ $class->name }}</option>
+                    @endforeach
+                </select>
+                <select id="filter-section-id" class="form-select form-select-sm" style="min-width: 170px;">
+                    <option value="">All Sections</option>
+                </select>
             </div>
             <div class="card-body p-0">
                 <div class="table-responsive">
@@ -104,6 +44,7 @@
                                 <th>Teacher</th>
                                 <th>Class / Section</th>
                                 <th>Subject</th>
+                                <th>Room</th>
                                 <th class="text-end">Actions</th>
                             </tr>
                         </thead>
@@ -116,14 +57,49 @@
     </div>
 @endsection
 
+@push('css')
+    <link rel="stylesheet" href="{{ asset('css/resize/class-mapping-compact.css') }}">
+@endpush
+
 @push('scripts')
     <script type="text/javascript">
         $(function() {
-            $('#teacher-mapping-table').DataTable({
+            const classSections = @json(
+                $classes->mapWithKeys(function ($class) {
+                    return [
+                        $class->id => $class->sections->map(function ($section) {
+                                return ['id' => $section->id, 'name' => $section->name];
+                            })->values(),
+                    ];
+                }));
+
+            function renderFilterSections(classId) {
+                const $filterSection = $('#filter-section-id');
+                const selected = $filterSection.val();
+                $filterSection.empty().append('<option value="">All Sections</option>');
+
+                if (!classId || !classSections[classId]) return;
+
+                classSections[classId].forEach(function(item) {
+                    $filterSection.append(`<option value="${item.id}">${item.name}</option>`);
+                });
+
+                if (selected && $filterSection.find(`option[value="${selected}"]`).length) {
+                    $filterSection.val(selected);
+                }
+            }
+
+            const table = $('#teacher-mapping-table').DataTable({
                 processing: true,
                 serverSide: true,
                 dom: '<"d-flex justify-content-between align-items-center p-2 border-bottom"l f>rt<"d-flex justify-content-between align-items-center p-2"i p>',
-                ajax: "{{ route('teacher.mapping') }}",
+                ajax: {
+                    url: "{{ route('teacher.mapping') }}",
+                    data: function(d) {
+                        d.class_id = $('#filter-class-id').val();
+                        d.section_id = $('#filter-section-id').val();
+                    }
+                },
                 columns: [{
                         data: 'DT_RowIndex',
                         name: 'DT_RowIndex',
@@ -147,6 +123,12 @@
                         searchable: false
                     },
                     {
+                        data: 'room_name',
+                        name: 'room_name',
+                        orderable: false,
+                        searchable: false
+                    },
+                    {
                         data: 'action',
                         name: 'action',
                         orderable: false,
@@ -166,10 +148,25 @@
                 },
                 drawCallback: function() {
                     $('.dataTables_paginate > .pagination').addClass('mb-0');
+                },
+                initComplete: function() {
+                    const $filter = $('#teacher-mapping-table_filter');
+                    $filter.addClass('d-flex align-items-center gap-2');
+                    $filter.find('label').addClass('mb-0');
+                    $('#filter-section-id').insertBefore($filter.find('label'));
+                    $('#filter-class-id').insertBefore($('#filter-section-id'));
                 }
             });
 
             $('.dataTables_length select').addClass('form-select-sm');
+            $('#filter-class-id').on('change', function() {
+                renderFilterSections(this.value);
+                $('#filter-section-id').val('');
+                table.draw();
+            });
+            $('#filter-section-id').on('change', function() {
+                table.draw();
+            });
         });
     </script>
 @endpush

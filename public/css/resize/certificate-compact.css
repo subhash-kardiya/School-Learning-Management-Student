@@ -1,0 +1,84 @@
+.certificate-modern.certificate-module-compact {
+    font-size: 13px;
+}
+
+.certificate-modern.certificate-module-compact.container-fluid {
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+}
+
+.certificate-modern.certificate-module-compact .card {
+    border-radius: 10px;
+}
+
+.certificate-modern.certificate-module-compact .card-header {
+    padding: 10px 12px;
+}
+
+.certificate-modern.certificate-module-compact .card-body {
+    padding: 12px !important;
+}
+
+.certificate-modern.certificate-module-compact h3,
+.certificate-modern.certificate-module-compact h4 {
+    font-size: 1.05rem;
+}
+
+.certificate-modern.certificate-module-compact h5,
+.certificate-modern.certificate-module-compact h6 {
+    font-size: 0.92rem;
+}
+
+.certificate-modern.certificate-module-compact .table {
+    font-size: 0.82rem;
+}
+
+.certificate-modern.certificate-module-compact .table thead th {
+    font-size: 0.7rem;
+    padding: 9px 10px;
+}
+
+.certificate-modern.certificate-module-compact .table tbody td {
+    font-size: 0.82rem;
+    padding: 8px 10px;
+}
+
+.certificate-modern.certificate-module-compact .form-label {
+    font-size: 0.72rem;
+    margin-bottom: 4px;
+}
+
+.certificate-modern.certificate-module-compact .form-control,
+.certificate-modern.certificate-module-compact .form-select {
+    font-size: 0.82rem;
+    padding: 7px 10px;
+}
+
+.certificate-modern.certificate-module-compact .btn {
+    font-size: 0.82rem;
+    padding: 0.4rem 0.75rem;
+}
+
+.certificate-modern.certificate-module-compact .badge,
+.certificate-modern.certificate-module-compact .chip {
+    font-size: 0.72rem;
+    padding: 0.32rem 0.52rem;
+}
+
+.certificate-modern.certificate-module-compact .text-muted,
+.certificate-modern.certificate-module-compact .small {
+    font-size: 0.78rem !important;
+}
+
+.certificate-modern.certificate-module-compact .preview-head .school-title {
+    font-size: 1rem;
+}
+
+.certificate-modern.certificate-module-compact .preview-head .school-sub {
+    font-size: 0.78rem;
+}
+
+.certificate-modern.certificate-module-compact .leaving-form-table td,
+.certificate-modern.certificate-module-compact .bf-line {
+    font-size: 0.8rem;
+}

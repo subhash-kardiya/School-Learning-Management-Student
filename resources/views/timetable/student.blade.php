@@ -3,7 +3,7 @@
 @section('title', 'My Timetable')
 
 @section('content')
-    <div class="container-fluid py-4">
+    <div class="container-fluid py-4 timetable-module-compact">
         
 
         <div class="card">

@@ -19,6 +19,7 @@
     --admin-border: #e6e8ec;
 }
 
+
 /* ---------- GLOBAL ---------- */
 body {
     background: var(--admin-bg);
@@ -80,8 +81,6 @@ body {
 
 /* Stats Card */
 .stats-card {
-    display: flex;
-    justify-content: space-between;
     align-items: center;
     background-color: #fff;
     padding: 10px;
@@ -543,8 +542,10 @@ form.d-inline {
     background: #f1f5f9;
     border: 1px solid #e5e7eb;
     padding: 8px 14px;
-    border-radius: 999px;
-    font-size: .75rem;
+    border-end-start-radius: 20px;
+    /* border-start-start-radius: 9px; */
+    border-start-end-radius: 20px;
+    font-size: .85rem;
     font-weight: 600;
     cursor: pointer;
 }
@@ -1076,4 +1077,3 @@ form.d-inline {
     display: block;
     margin-top: 4px;
 }
-

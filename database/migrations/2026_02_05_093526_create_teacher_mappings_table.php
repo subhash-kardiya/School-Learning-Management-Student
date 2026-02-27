@@ -16,6 +16,7 @@ return new class extends Migration
             $table->foreignId('teacher_id')->constrained()->cascadeOnDelete();
             $table->foreignId('subject_id')->constrained()->cascadeOnDelete();
             $table->foreignId('section_id')->constrained()->cascadeOnDelete();
+            $table->unsignedBigInteger('room_id')->nullable();
             $table->timestamps();
 
             $table->unique(['teacher_id', 'subject_id', 'section_id']);

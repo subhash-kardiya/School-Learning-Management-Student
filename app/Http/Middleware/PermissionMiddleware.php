@@ -43,11 +43,20 @@ class PermissionMiddleware
                 break;
         }
 
-        if (!$user || !$user->hasPermission($permission)) {
+        $permissions = array_values(array_filter(array_map('trim', explode(',', (string) $permission))));
+        $authorized = false;
+        foreach ($permissions as $perm) {
+            if ($user && $user->hasPermission($perm)) {
+                $authorized = true;
+                break;
+            }
+        }
+
+        if (!$user || !$authorized) {
             if ($request->ajax()) {
                 return response()->json(['message' => 'Unauthorized access'], 403);
             }
-            abort(403, 'Unauthorized access - You do not have the required permission: ' . $permission);
+            abort(403, 'Unauthorized access - Missing required permission.');
         }
 
         return $next($request);

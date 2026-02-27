@@ -1,7 +1,7 @@
 <?php $__env->startSection('title', 'Faculty Profile View'); ?>
 
 <?php $__env->startSection('content'); ?>
-    <div class="container-fluid py-4">
+    <div class="container-fluid py-4 teacher-module-compact">
 
         <!-- Header Section -->
         <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
@@ -38,7 +38,7 @@
                     <p class="text-muted small mb-3">System Identity: <?php echo e($teacher->username); ?></p>
 
                     <div class="d-flex justify-content-center gap-2 mb-4 flex-wrap">
-                        <span class="badge badge-gradient-info hover-scale"><?php echo e($teacher->role->name ?? 'Faculty'); ?></span>
+                        <span class="badge badge-gradient-info hover-scale">Faculty</span>
                         <?php if($teacher->status == 1): ?>
                             <span class="badge badge-gradient-success hover-scale">Active</span>
                         <?php else: ?>
@@ -141,7 +141,7 @@
                                 </div>
                                 <div class="d-flex flex-wrap gap-2">
                                     <?php if($teacher->subjects && $teacher->subjects->count()): ?>
-                                        <?php $__currentLoopData = $teacher->subjects; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $subject): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                        <?php $__currentLoopData = $teacher->subjects->unique('id'); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $subject): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                             <span class="badge bg-light text-dark border">
                                                 <?php echo e($subject->name); ?> (<?php echo e($subject->subject_code); ?>)
                                             </span>
@@ -161,5 +161,9 @@
 
   
 <?php $__env->stopSection(); ?>
+
+<?php $__env->startPush('css'); ?>
+<link rel="stylesheet" href="<?php echo e(asset('css/resize/teacher-compact.css')); ?>">
+<?php $__env->stopPush(); ?>
 
 <?php echo $__env->make('layouts.admin', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\Users\pc\OneDrive\Desktop\school_lms\resources\views/admin/teachers/show.blade.php ENDPATH**/ ?>

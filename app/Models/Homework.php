@@ -3,9 +3,12 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Homework extends Model
 {
+    use HasFactory;
+
     protected $table = 'homeworks';
 
     protected $fillable = [
@@ -19,6 +22,11 @@ class Homework extends Model
         'due_date',
         'attachment',
         'status',
+    ];
+
+    protected $casts = [
+        'due_date' => 'date',
+        'status' => 'boolean',
     ];
 
     public function teacher()

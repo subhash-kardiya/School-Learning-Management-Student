@@ -33,7 +33,7 @@
 
 @section('content')
     <div class="container-fluid py-4">
-        <form action="{{ route('profile.update') }}" method="POST" enctype="multipart/form-data" id="profile-form" class="profile-form">
+        <form action="{{ route($role === 'teacher' ? 'teacher.profile.update' : 'profile.update') }}" method="POST" enctype="multipart/form-data" id="profile-form" class="profile-form">
             @csrf
             @method('PUT')
 
