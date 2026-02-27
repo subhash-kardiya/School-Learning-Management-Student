@@ -1,0 +1,100 @@
+.class-mapping-compact {
+    font-size: 13px;
+}
+
+.class-mapping-compact.container-fluid {
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+}
+
+.class-mapping-compact .card {
+    border-radius: 10px;
+}
+
+.class-mapping-compact .card-header {
+    padding: 10px 12px;
+}
+
+.class-mapping-compact .card-body {
+    padding: 12px !important;
+}
+
+.class-mapping-compact .card-title,
+.class-mapping-compact h5 {
+    font-size: 0.98rem;
+}
+
+.class-mapping-compact .table {
+    font-size: 0.82rem;
+}
+
+.class-mapping-compact .table thead th {
+    font-size: 0.7rem;
+    padding: 9px 10px;
+}
+
+.class-mapping-compact .table tbody td {
+    font-size: 0.82rem;
+    padding: 8px 10px;
+}
+
+.class-mapping-compact .form-label {
+    font-size: 0.72rem;
+    margin-bottom: 4px;
+}
+
+.class-mapping-compact .form-control,
+.class-mapping-compact .form-select {
+    font-size: 0.82rem;
+    padding: 7px 10px;
+}
+
+.class-mapping-compact .btn {
+    font-size: 0.82rem;
+    padding: 0.4rem 0.75rem;
+}
+
+.class-mapping-compact .dataTables_wrapper .dataTables_filter input,
+.class-mapping-compact .dataTables_wrapper .dataTables_length select {
+    height: 32px;
+    font-size: 0.78rem;
+    padding: 4px 8px;
+}
+
+.class-mapping-compact .dataTables_wrapper .dataTables_info,
+.class-mapping-compact .dataTables_wrapper .dataTables_paginate {
+    font-size: 0.78rem;
+}
+
+.class-mapping-compact .dataTables_wrapper .page-item .page-link {
+    min-width: 30px;
+    height: 30px;
+    padding: 0.2rem 0.45rem !important;
+    font-size: 0.78rem !important;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.class-mapping-compact #teacher-mapping-table_filter {
+    display: flex !important;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.class-mapping-compact #teacher-mapping-table_filter label {
+    margin: 0;
+}
+
+.class-mapping-compact #filter-class-id,
+.class-mapping-compact #filter-section-id {
+    min-width: 170px !important;
+    width: 170px !important;
+    height: 32px;
+}
+
+.class-mapping-compact #teacher-mapping-table_filter input[type="search"] {
+    width: 220px !important;
+}
